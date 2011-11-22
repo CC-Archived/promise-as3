@@ -729,7 +729,7 @@ package com.codecatalyst.promise.tests
 			},40);	
 		}	
 		
-		[Test(order=8.4, async, timeout="70", description="Test Promise::wait(delay,<function>,...params)")] 
+		[Test(order=8.4, async, timeout="90", description="Test Promise::wait(delay,<function>,...params)")] 
 		public function testWait_withFunctionAndParams():void 
 		{
 			initCounters();
