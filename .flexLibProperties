@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
-  <includeClasses/>
-  <includeResources>
-    <resourceEntry destPath="design.xml" sourcePath="design.xml"/>
-  </includeResources>
+<flexLibProperties includeAllClasses="false" useMultiPlatformConfig="false" version="3">
+  <includeClasses>
+    <classEntry path="com.codecatalyst.promise.Callbacks"/>
+    <classEntry path="com.codecatalyst.promise.Deferred"/>
+    <classEntry path="com.codecatalyst.promise.Promise"/>
+    <classEntry path="com.codecatalyst.promise.PromiseUtil"/>
+    <classEntry path="com.codecatalyst.promise.jQuery"/>
+  </includeClasses>
+  <includeResources/>
   <namespaceManifests>
     <namespaceManifestEntry manifest="manifest.xml" namespace="http://ns.codecatalyst.com/2011/promise"/>
   </namespaceManifests>

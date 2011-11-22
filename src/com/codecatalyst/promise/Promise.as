@@ -24,6 +24,12 @@ package com.codecatalyst.promise
 {
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.IEventDispatcher;
+	import flash.utils.clearInterval;
+	import flash.utils.setTimeout;
+	
+	import mx.rpc.AsyncToken;
+	import mx.rpc.Responder;
 
 	/**
 	 * Promise.
@@ -44,7 +50,7 @@ package com.codecatalyst.promise
 		/**
 		 * Indicates this Promise has not yet been fulfilled.
 		 */
-		public function get unfulfilled():Boolean
+		public function get pending():Boolean
 		{
 			return deferred.pending;
 		}
@@ -53,18 +59,18 @@ package com.codecatalyst.promise
 		/**
 		 * Indicates this Promise has been fulfilled.
 		 */
-		public function get fulfilled():Boolean
+		public function get resolved():Boolean
 		{
-			return deferred.succeeded;
+			return deferred.resolved;
 		}
 		
 		[Bindable( "stateChanged" )]
 		/**
 		 * Indicates this Promise has failed.
 		 */
-		public function get failed():Boolean
+		public function get rejected():Boolean
 		{
-			return deferred.failed;
+			return deferred.rejected;
 		}
 		
 		[Bindable( "stateChanged" )]
@@ -80,9 +86,9 @@ package com.codecatalyst.promise
 		/**
 		 * Progress supplied when this Promise was updated.
 		 */
-		public function get progress():*
+		public function get status():*
 		{
-			return deferred.progress;
+			return deferred.status;
 		}
 		
 		[Bindable( "stateChanged" )]
@@ -126,7 +132,7 @@ package com.codecatalyst.promise
 		// ========================================
 		
 		/**
-		 * Constructor.
+		 * Constructor should only be called/instantiated by a Deferred constructor
 		 */
 		public function Promise( deferred:Deferred )
 		{
@@ -155,25 +161,36 @@ package com.codecatalyst.promise
 				promises = promises[ 0 ];
 			
 			// Ensure the promises Array is populated with Promises.
-			var parameterCount:int = promises.length;
+			var parameterCount:int = promises ? promises.length : 0;
 			for ( var parameterIndex:int = 0; parameterIndex <  parameterCount; parameterIndex++ )
 			{
 				var parameter:* = promises[ parameterIndex ];
 				
-				switch ( parameter.constructor )
+				if (parameter == null) 
 				{
-					case Promise:
-						break;
+					promises[ parameterIndex ] = new Deferred().resolve(null).promise;
 					
-					case Deferred:
-						// Replace the promises Array element with the associated Promise for the specified Deferred value.
-						promises[ parameterIndex ] = parameter.promise;
-						break;
+				} else {
+					
+					switch ( parameter.constructor )
+					{
+						case Promise:
+							break;
 						
-					default:
-						// Create a new Deferred resolved with the specified parameter value, and replace the promises Array element with the associated Promise.
-						promises[ parameterIndex ] = new Deferred().resolve( parameter ).promise;
-						break;
+						case Deferred:
+							// Replace the promises Array element with the associated Promise for the specified Deferred value.
+							promises[ parameterIndex ] = parameter.promise;
+							break;
+							
+						default:
+							// Create a new Deferred resolved with the specified parameter value, 
+							// and replace the promises Array element with the associated Promise.
+							
+							var func : Function = parameter as Function;
+							
+							promises[ parameterIndex ] = new Deferred( func ).resolve( func ? null : parameter).promise;
+							break;
+					}
 				}
 			}
 			
@@ -214,6 +231,156 @@ package com.codecatalyst.promise
 			return deferred.promise;
 		}
 		
+		
+		/**
+		 * Similar to the callLater() function but supports any arbitrary delay 
+		 * and allows optional, additional parameters to passed [later] to the 
+		 * resolved handler [assigned via .done() or .then()].
+		 *  
+		 * A special configuration allows the 1st optional parameter to be a function
+		 * reference so the wait(delay,function(){...}) syntax can be easily used.
+		 * 
+		 * Here are the possible call options:
+		 * 
+		 *   wait( delay )
+		 *   wait( delay, ...params )
+		 *   wait( delay, func2Call )
+		 * 	 wait( delay, func2Call, ...func2Params )
+		 * 
+		 * @param delay Number of milliseconds to wait before resolving/projecting the promise; 
+		 *              Default value === 30 msecs
+		 *
+		 * @param args  Optional listing of parameters 
+		 */
+		public static function wait ( delay:uint=30, ...args ) : Promise {
+			
+				/**
+				 * If the first variable param is a Function reference, then auto-call
+				 * that function with/without any subsequent optional params 
+				 */
+				function doInlineCallback():* {
+					var func 	: Function = args.length ? args[0] as Function : null,
+						result  : * 	   = null;
+					
+					if (func != null) {
+						// 1) Remove function element,
+						// 2) Call function, save response, and
+						// 3) Clear arguments
+						
+						args.shift();
+						
+						result = func.apply(null, args.length ? args : null);
+						args   = [ ];
+					}
+					
+					return result;
+				}
+				
+			return new Deferred( function(dfd:Deferred) : void {
+				var timer:uint = setTimeout( function():void{
+					clearInterval(timer);
+
+					// Call the specified function (if any)
+					var result : * = doInlineCallback();
+					var params : * = ((args.length==1) && (args[0] is Object)) ? args[0] : args; 
+					
+					// Since resolve() expects a resultVal == *, we use the .call() invocation
+					
+					dfd.resolve.call( dfd, !args.length  ? result : params );
+					
+				}, delay );
+				
+			}).promise;
+		}
+		
+		
+		/**
+		 * Power feature to easily create deferred [delegated handling of response/fault processing]
+		 * for targeted functions, AsyncTokens, HTTPService, URLLoader, RemoteObject, and generalized
+		 * IEventDispatchers. 
+		 * 
+		 * If the target is an IEventDispatcher, this creates a Promise that adapts an 
+		 * asynchronous operation which uses event-based notification:
+		 * 
+		 *  	watch( <IEventDispatcher>, <options> );
+		 *  	watch( <IEventDispatcher>, <resultEventType> ); 
+		 * 		watch( <IEventDispatcher>, <resultEventType>, <faultEventTypes[]>, );
+		 *  	watch( <IEventDispatcher>, <resultEventType>, <faultEventTypes[]>, <options> );
+		 * 
+		 * The <options> parameter is a hashmap of optional key/value pairs:
+		 * 
+		 *   { 
+		 * 		useCapture : <boolean>,
+		 * 	    priority   : <int>,
+		 * 		types 	   : {
+		 * 						result 		: <string>,
+		 * 						faults 		: [ <string> ],
+		 * 						progress	: {
+		 * 										type : <string>,
+		 * 										path : <string>
+		 * 				 					  }
+		 * 				     },
+		 * 
+		 * 		// Token options used to filter only specific event instances of `type`
+		 * 
+		 * 		token  	   : {
+		 * 						path          : <string>,
+		 * 						expectedValue : *
+		 *               	 }
+		 *   }
+		 * 
+		 * 
+		 * @param args Array of optional parameters; only used when the target is an IEventDispatcher
+		 * 
+		 * @see com.codecatalyst.util.promise.PromiseUtil#watch()
+		 */
+		public static function watch (target:Object, ...args):Promise {
+			switch (target.constructor) 
+			{
+				case Promise    :
+					return Promise.when( target );
+					
+				case Function   :
+					return new Deferred( function(dfd) {
+								var results = Function(target).apply(null,args);
+								
+								// Could be a Promise-generator or a `normal` function
+								
+								if (results is Promise) 
+								{
+									Promise(results)
+										.pipe( function(value) { 
+											return dfd.resolve(value); 
+										});
+										
+								} else {
+									dfd.resolve( results );
+								}
+								
+							}).promise;
+					
+					//return  new Deferred( target as Function ).resolve( args ).promise;
+					
+				case AsyncToken :
+					return  new Deferred( function( dfd ) {
+								var responder = new Responder( dfd.resolve, dfd.reject );
+								AsyncToken(target).addResponder( responder );
+							}).promise;
+					
+				default        :
+					if ( target is IEventDispatcher )
+					{
+						return PromiseUtil.watch.apply(null, [target].concat(args));
+					}
+			}
+			
+			// Return empty, resolved promise
+			
+			return new Deferred( function(dfd:Deferred){ 
+						dfd.resolve( [target].concat(args) ); 
+					}).promise;
+		}		
+		
 		// ========================================
 		// Public methods
 		// ========================================
@@ -235,12 +402,43 @@ package com.codecatalyst.promise
 		}
 		
 		/**
+		 * Alias to Deferred.then().
+		 * More intuitive with syntax:  $.when( ... ).done( ... )
+		 * 
+		 * @param resultCallback Function to be called when the Promise resolves.
+		 */
+		public function done ( resultCallback : Function ):Promise 
+		{
+			return deferred.then( resultCallback ).promise;
+		}
+
+		/**
+		 * Alias to Deferred.fail(); match jQuery API
+		 * 
+		 * @param resultCallback Function to be called when the Promise resolves.
+		 */
+		public function fail ( resultCallback : Function ):Promise 
+		{
+			return deferred.fail( resultCallback ).promise;
+		}
+
+		/**
+		 * Registers a callback to be called when this Promise is updated.
+		 */
+		public function progress( progressCallback:Function ):Promise
+		{
+			return deferred.progress( progressCallback ).promise;
+		}
+		
+		
+		/**
 		 * Utility method to filter and/or chain Deferreds.
 		 */
-		public function pipe( resultCallback:Function, errorCallback:Function = null ):Promise
+		public function pipe( resultCallback:Function, errorCallback:Function = null, progressCallback:Function=null ):Promise
 		{
-			return deferred.pipe( resultCallback, errorCallback );
+			return deferred.pipe( resultCallback, errorCallback, progressCallback );
 		}
+		
 		
 		/**
 		 * Registers a callback to be called when this Promise is updated.
@@ -275,7 +473,9 @@ package com.codecatalyst.promise
 		}
 		
 		/**
-		 * Cancel this Promise.
+		 * Special feature of this read-only promise:
+		 * Ability to `cancel` this pending Promise.
+		 * 
 		 */
 		public function cancel( reason:* = null ):void
 		{

@@ -29,9 +29,9 @@ package com.codecatalyst.promise
 	 * Deferred.
 	 * 
 	 * A chainable utility object that can register multiple callbacks into callback queues, invoke callback queues,
-	 * and relay the success, failure and progress state of any synchronous or asynchronous operation.
+	 * and relay the success, failure and progress _state of any synchronous or asynchronous operation.
 	 * 
-	 * @see com.codecatalyst.promise.Promise
+	 * @see com.codecatalyst.util.promise.Promise
 	 * 
 	 * Inspired by jQuery's Deferred implementation.
 	 * 
@@ -44,33 +44,33 @@ package com.codecatalyst.promise
 		// ========================================
 		
 		/**
-		 * Internal state change Event type.
+		 * Internal _state change Event type.
 		 */
 		internal static const STATE_CHANGED:String = "stateChanged";
 
 		// ========================================
-		// Protected constants
+		// Public constants
 		// ========================================
 		
 		/**
 		 * State for a Deferred that has not yet been resolved, rejected or cancelled.
 		 */
-		protected static const PENDING_STATE:String = "pending";
+		public static const PENDING_STATE:String = "pending";
 
 		/**
 		 * State for a Deferred that has been resolved.
 		 */
-		protected static const SUCCEEDED_STATE:String = "succeeded";
+		public static const RESOLVED_STATE:String = "resolved";
 
 		/**
 		 * State for a Deferred that has been rejected.
 		 */
-		protected static const FAILED_STATE:String = "failed";
+		public static const REJECTED_STATE:String = "rejected";
 		
 		/**
 		 * State for a Deferred that has been cancelled.
 		 */
-		protected static const CANCELLED_STATE:String = "cancelled";
+		public static const CANCELLED_STATE:String = "cancelled";
 		
 		// ========================================
 		// Public properties
@@ -86,45 +86,57 @@ package com.codecatalyst.promise
 		
 		[Bindable( "stateChanged" )]
 		/**
+		 * Exposes read-only value of current state
+		 */
+		public function get state():String
+		{
+			return _state;
+		}
+		
+
+		[Bindable( "stateChanged" )]
+		/**
 		 * Indicates this Deferred has not yet been resolved, rejected or cancelled.
 		 */
 		public function get pending():Boolean
 		{
-			return ( state == PENDING_STATE );
+			return ( _state == PENDING_STATE );
 		}
 		
+
 		[Bindable( "stateChanged" )]
 		/**
 		 * Indicates this Deferred has been resolved.
+		 * Alias function; used to match jQuery API
 		 */
-		public function get succeeded():Boolean
-		{
-			return ( state == SUCCEEDED_STATE );
+		public function get resolved():Boolean {
+			return ( _state == RESOLVED_STATE );
 		}
 		
 		[Bindable( "stateChanged" )]
 		/**
 		 * Indicates this Deferred has been rejected.
+		 * Alias function; used to match jQuery API
 		 */
-		public function get failed():Boolean
-		{
-			return ( state == FAILED_STATE );
+		public function get rejected():Boolean {
+			return ( _state == REJECTED_STATE );
 		}
 		
 		[Bindable( "stateChanged" )]
 		/**
-		 * Indicates this Deferred has been cancelled.
+		 * Indicates this Deferred has been cancelled
+		 * Alias function; used to match jQuery API
 		 */
-		public function get cancelled():Boolean
-		{
-			return ( state == CANCELLED_STATE );
+		public function get cancelled():Boolean {
+			return ( _state == CANCELLED_STATE );
 		}
+		
 		
 		[Bindable( "stateChanged" )]
 		/**
 		 * Progress supplied when this Deferred was updated.
 		 */
-		public function get progress():*
+		public function get status():*
 		{
 			return _progress;
 		}
@@ -186,14 +198,14 @@ package com.codecatalyst.promise
 		protected var _reason:* = null;
 		
 		/**
-		 * Deferred state.
+		 * Deferred _state.
 		 * 
 		 * @see #STATE_PENDING
-		 * @see #STATE_SUCCEEDED
-		 * @see #STATE_FAILED
+		 * @see #STATE_RESOLVED
+		 * @see #STATE_REJECTED
 		 * @see #STATE_CANCELLED
 		 */
-		protected var state:String = Deferred.PENDING_STATE;
+		protected var _state:String = Deferred.PENDING_STATE;
 		
 		/**
 		 * Callbacks to be called when this Deferred is updated.
@@ -227,11 +239,16 @@ package com.codecatalyst.promise
 		/**
 		 * Constructor.
 		 */
-		public function Deferred()
+		public function Deferred(callback:Function=null)
 		{
 			super();
 			
 			_promise = new Promise( this );
+			
+			if ( callback ) 
+			{
+				callback.apply( this, callback.length ? [this] : [ ] );
+			}
 		}
 		
 		// ========================================
@@ -239,9 +256,32 @@ package com.codecatalyst.promise
 		// ========================================
 		
 		/**
+		 * Alias to support jQuery API
+		 */
+		public function done( callback:Function=null ) :Deferred {
+			return onResult(callback);
+		}
+		
+		/**
+		 * Alias to support jQuery API
+		 */
+		public function fail( callback:Function=null ) :Deferred {
+			return onError(callback);
+		}
+		
+		/**
+		 * Alias to support jQuery API
+		 */
+		public function progress( callback:Function=null ) :Deferred {
+			return onProgress(callback);
+		}
+		
+
+		
+		/**
 		 * Register callbacks to be called when this Deferred is resolved, rejected, cancelled and updated.
 		 */
-		public function then( resultCallback:Function, errorCallback:Function = null, progressCallback:Function = null, cancelCallback:Function = null ):Deferred
+		public function then( resultCallback:Function=null, errorCallback:Function = null, progressCallback:Function = null, cancelCallback:Function = null ):Deferred
 		{
 			onResult( resultCallback );
 			onError( errorCallback );
@@ -254,7 +294,7 @@ package com.codecatalyst.promise
 		/**
 		 * Registers a callback to be called when this Deferred is either resolved, rejected or cancelled.
 		 */
-		public function always( alwaysCallback:Function ):Deferred
+		public function always( alwaysCallback:Function=null):Deferred
 		{
 			if ( alwaysCallback != null )
 			{
@@ -262,17 +302,17 @@ package com.codecatalyst.promise
 				{
 					alwaysCallbacks.push( alwaysCallback );
 				}
-				else if ( succeeded )
+				else if ( resolved)
 				{
-					notify( [ alwaysCallback ], result );
+					notifyCallbacks( [ alwaysCallback ], result );
 				}
-				else if ( failed )
+				else if ( rejected )
 				{
-					notify( [ alwaysCallback ], error );
+					notifyCallbacks( [ alwaysCallback ], error );
 				}
 				else if ( cancelled )
 				{
-					notify( [ alwaysCallback ], reason );
+					notifyCallbacks( [ alwaysCallback ], reason );
 				}
 			}
 				
@@ -282,7 +322,7 @@ package com.codecatalyst.promise
 		/**
 		 * Utility method to filter and/or chain Deferreds.
 		 */
-		public function pipe( resultCallback:Function, errorCallback:Function = null ):Promise
+		public function pipe( resultCallback:Function=null, errorCallback:Function = null, progressCallback:Function=null ):Promise
 		{
 			var deferred:Deferred = new Deferred();
 			
@@ -335,7 +375,26 @@ package com.codecatalyst.promise
 				},
 				function ( update:* ):void
 				{
-					deferred.update( update );
+					if ( progressCallback != null )
+					{
+						var returnValue:* = progressCallback( update );
+						if ( returnValue is Deferred )
+						{
+							returnValue.promise.then( deferred.resolve, deferred.reject, deferred.update, deferred.cancel );
+						}
+						else if ( returnValue is Promise )
+						{
+							returnValue.then( deferred.resolve, deferred.reject, deferred.update, deferred.cancel );
+						}
+						else
+						{
+							deferred.update( returnValue );
+						}
+					}
+					else
+					{
+						deferred.update( update );
+					}
 				},
 				function ( reason:* ):void
 				{
@@ -357,28 +416,29 @@ package com.codecatalyst.promise
 				{
 					progressCallbacks.push( progressCallback );
 					
-					if ( progress != null )
-						notify( [ progressCallback ], progress );
+					if ( status != null )
+						notifyCallbacks( [ progressCallback ], status );
 				}
 			}
 			
 			return this;
 		}
 		
+		
 		/**
 		 * Registers a callback to be called when this Deferred is resolved.
 		 */
-		public function onResult( resultCallback:Function ):Deferred
+		public function onResult( callback:Function ):Deferred
 		{
-			if ( resultCallback != null )
+			if ( callback != null )
 			{
-				if ( pending )
+				if ( pending && !contains(resultCallbacks,callback))
 				{
-					resultCallbacks.push( resultCallback );
+					resultCallbacks.push( callback );
 				}
-				else if ( succeeded )
+				else if ( resolved )
 				{
-					notify( [ resultCallback ], result );
+					notifyCallbacks( [ callback ], result );
 				}
 			}
 			
@@ -388,22 +448,23 @@ package com.codecatalyst.promise
 		/**
 		 * Registers a callback to be called when this Deferred is rejected.
 		 */
-		public function onError( errorCallback:Function ):Deferred
+		public function onError( callback:Function ):Deferred
 		{
-			if ( errorCallback != null )
+			if ( callback != null )
 			{
-				if ( pending )
+				if ( pending  && !contains(errorCallbacks,callback))
 				{
-					errorCallbacks.push( errorCallback );
+					errorCallbacks.push( callback );
 				}
-				else if ( failed )
+				else if ( rejected )
 				{
-					notify( [ errorCallback ], error );
+					notifyCallbacks( [ callback ], error );
 				}
 			}
 			
 			return this;
 		}
+		
 		
 		/**
 		 * Registers a callback to be called when this Deferred is cancelled.
@@ -416,9 +477,9 @@ package com.codecatalyst.promise
 				{
 					cancelCallbacks.push( cancelCallback );
 				}
-				else if ( failed )
+				else if ( cancelled )
 				{
-					notify( [ cancelCallback ], reason );
+					notifyCallbacks( [ cancelCallback ], reason );
 				}
 			}
 			
@@ -426,31 +487,44 @@ package com.codecatalyst.promise
 		}
 		
 		/**
-		 * Update this Deferred and notify relevant callbacks.
+		 * Update this Deferred and notifyCallbacks relevant callbacks.
 		 */
-		public function update( progress:* ):Deferred
+		public function update( progress:*=null ):Deferred
 		{
 			if ( pending )
 			{
 				_progress = progress;
 				
-				notify( progressCallbacks, progress );
+				notifyCallbacks( progressCallbacks, progress );
 			}
 			
 			return this;
 		}
 		
+		
+
 		/**
-		 * Resolve this Deferred and notify relevant callbacks.
+		 *  Same as update(); but alias is useful to match Javascript API
+		 *
+		 *  @see ::update()
+		 */ 
+		public function notify( progress:*=null ):Deferred 
+		{
+			return update( progress );
+		}
+		
+		/**
+		 * Resolve this Deferred and notifyCallbacks relevant callbacks.
 		 */
-		public function resolve( result:* ):Deferred
+		public function resolve( results:*=null ):Deferred
 		{
 			if ( pending )
 			{
-				_result = result;
-				setState( Deferred.SUCCEEDED_STATE );
+				_result = results;
 				
-				notify( resultCallbacks.concat( alwaysCallbacks ), result );
+				setState( Deferred.RESOLVED_STATE );
+				
+				notifyCallbacks( resultCallbacks.concat( alwaysCallbacks ), results );
 				releaseCallbacks();
 			}
 			
@@ -458,16 +532,17 @@ package com.codecatalyst.promise
 		}
 		
 		/**
-		 * Reject this Deferred and notify relevant callbacks.
+		 * Reject this Deferred and notifyCallbacks relevant callbacks.
 		 */
-		public function reject( error:* ):Deferred
+		public function reject( error:*=null ):Deferred
 		{
 			if ( pending )
 			{
 				_error = error;
-				setState( Deferred.FAILED_STATE );
 				
-				notify( errorCallbacks.concat( alwaysCallbacks ), error );
+				setState( Deferred.REJECTED_STATE );
+				
+				notifyCallbacks( errorCallbacks.concat( alwaysCallbacks ), error );
 				releaseCallbacks();
 			}
 			
@@ -475,15 +550,17 @@ package com.codecatalyst.promise
 		}
 		
 		/**
-		 * Cancel this Deferred and notify relevant callbacks.
+		 * Cancel this Deferred and notifyCallbacks relevant callbacks.
 		 */
-		public function cancel( reason:* = null ):Deferred
+		public function cancel( reason:*=null ):Deferred
 		{
 			if ( pending )
 			{
+				_reason = reason;
+				
 				setState( Deferred.CANCELLED_STATE );
 				
-				notify( cancelCallbacks.concat( alwaysCallbacks ), reason );
+				notifyCallbacks( cancelCallbacks.concat( alwaysCallbacks ), reason );
 				releaseCallbacks();
 			}
 			
@@ -495,18 +572,18 @@ package com.codecatalyst.promise
 		// ========================================
 		
 		/**
-		 * Set the state for this Deferred.
+		 * Set the _state for this Deferred.
 		 * 
 		 * @see #pending
-		 * @see #succeeded
-		 * @see #failed
+		 * @see #resolved
+		 * @see #rejected
 		 * @see #cancelled
 		 */
 		protected function setState( value:String ):void
 		{
-			if ( value != state )
+			if ( value != _state )
 			{
-				state = value;				
+				_state = value;				
 				dispatchEvent( new Event( STATE_CHANGED ) );
 			}
 		}
@@ -514,7 +591,7 @@ package com.codecatalyst.promise
 		/**
 		 * Notify the specified callbacks, optionally passing the a reference to this Deferred and the specified value.
 		 */
-		protected function notify( callbacks:Array, value:* ):void
+		protected function notifyCallbacks( callbacks:Array, value:* ):void
 		{
 			for each ( var callback:Function in callbacks )
 			{
@@ -525,11 +602,11 @@ package com.codecatalyst.promise
 						break;
 					
 					case 1:
-						callback( value );
+						callback.call(this, value );
 						break;
 					
 					default:
-						callback();
+						callback.call(this);
 						break;
 				}
 			}
@@ -540,11 +617,18 @@ package com.codecatalyst.promise
 		 */
 		protected function releaseCallbacks():void
 		{
-			resultCallbacks = [];
-			errorCallbacks = [];
+			resultCallbacks   = [];
+			errorCallbacks    = [];
 			progressCallbacks = [];
-			cancelCallbacks = [];
-			alwaysCallbacks = [];
+			cancelCallbacks   = [];
+			alwaysCallbacks   = [];
+		}
+		
+		/**
+		 * Utility methods to simulate Array.contains() 
+		 */
+		private function contains(list:Array,item:*):Boolean {
+			return (list.indexOf(item) > -1)
 		}
 	}
 }
