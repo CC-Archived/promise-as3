@@ -680,7 +680,7 @@ package com.codecatalyst.promise.tests
 		}		
 		
 		
-		[Test(order=8.2, async, timeout="60", description="Test Promise::wait(delay,...params)")] 
+		[Test(order=8.2, async, timeout="70", description="Test Promise::wait(delay,...params)")] 
 		public function testWait_withParams():void 
 		{
 			initCounters();
@@ -791,6 +791,10 @@ package com.codecatalyst.promise.tests
 		}	
 		
 		[Test(order=9.2, async, timeout="100", description="Test Promise::when() with rejection")] 
+		/**
+		 * Test a promise rejection will stop all futures and report properly in
+		 * the when() handlers assigned. 
+		 */
 		public function testWhen_withReject():void 
 		{
 			initCounters();
@@ -802,9 +806,16 @@ package com.codecatalyst.promise.tests
 									dfd.reject("rejected_2");
 							}).promise,
 				
+				promise3 =  new Deferred( function(dfd) {
+								Promise.wait(45,"resolved_p3_i")
+								       .then(function(){
+										 dfd.resolve("resolved_p3");  
+									   });
+							}).promise,
+				
 				// Now create when() batch set...
 				
-				batch    = Promise.when( promise1, promise2 )
+				batch    = Promise.when( promise1, promise2, promise3 )
 								  .then( onResultHandler, onErrorHandler );
 			
 			Async.delayCall(this, function(){
@@ -819,6 +830,10 @@ package com.codecatalyst.promise.tests
 		}
 		
 		[Test(order=9.3, description="Test Promise::when() with cancel")] 
+		/**
+		 * Test a promise cancellation will still propogate properly to a
+		 * when() handlers assigned via when().then() or when().done(). 
+		 */
 		public function testWhen_withCancel():void 
 		{
 			initCounters();
@@ -966,27 +981,25 @@ package com.codecatalyst.promise.tests
 				checkCancels(promise, false, null, 0);
 		}
 		
-		//[Ignore]
 		[Test(order=10.3, async, timeout="95", description="Test Promise::watch(<eventDispatcher>)")] 
-		public function testWatch_withEventDispatcher():void 
+		/**
+		 * Test Promise::watch() using a resultEventType string
+		 */
+		public function testWatch_eventDispatcherWithResultEventType():void 
 		{
 			initCounters();
 			
-			var result : int         = 313;
-			
+			var start  : Number      = new Date().milliseconds;
+			var end    : Number      = null;
 			var msg    : String      = "rpc faulted via token";
 			var timer  : Timer		 = new Timer(10,1);
-			var options: Object      = { 
-										types:{ 
-												result : TimerEvent.TIMER_COMPLETE
-											  } 
-										};
 			
 			// Be sure to pipe the response to get only the msg value...
 			
-			var promise: Promise     =   Promise.watch( timer, options )
+			var promise: Promise     =   Promise.watch( timer, TimerEvent.TIMER_COMPLETE )
 												.pipe( function(event) {
-													return result + 1;  
+													end = new Date().milliseconds;
+													return (end - start) > 10 ? "timerComplete" : "";
 												})
 												.then( onResultHandler, onErrorHandler );
 			timer.start();
@@ -994,13 +1007,43 @@ package com.codecatalyst.promise.tests
 			Async.delayCall(this, function(){
 				
 				// Now check the promise state 
-				checkResults(promise, true,  result+1, 1);
+				checkResults(promise, true,  "timerComplete", 1);
 				checkRejects(promise, false, null, 0);
 				checkUpdates(promise, false, null, 0);
 				checkCancels(promise, false, null, 0);
 				
 			}, 25 );	
-		}		
+		}	
+		
+		
+		[Test(order=10.4, async, timeout="85", description="Test Promise::watch(<eventDispatcher>,null,<options>)")] 
+		/**
+		 * Test Promise::watch() using a resultEventType and progressEventType strings
+		 */
+		public function testWatch_eventDispatcherWithProgress():void 
+		{
+			initCounters();
+			
+			var timer  : Timer		 = new Timer(5,3);
+			
+			// Be sure to pipe the response to get only the msg value...
+			
+			var onTimer		: Function    =  function(event:TimerEvent) { return event.type; };
+			var promise		: Promise     =  Promise.watch( timer, TimerEvent.TIMER_COMPLETE, null, TimerEvent.TIMER)
+													.pipe( onTimer, null, onTimer )
+													.then( onResultHandler, onErrorHandler, onProgressHandler );
+			timer.start();
+			
+			Async.delayCall(this, function(){
+				
+				// Now check the promise state 
+				checkResults(promise, true,  "timerComplete", 1);
+				checkRejects(promise, false, null, 0);
+				checkUpdates(promise, true,  "timer", 3);
+				checkCancels(promise, false, null, 0);
+				
+			}, 55 );	
+		}
 		
 		// *****************************************************************************
 		// Protected Methods

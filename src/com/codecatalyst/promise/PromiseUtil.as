@@ -22,10 +22,15 @@ package com.codecatalyst.promise
 		 * 
 		 *  	watch( <IEventDispatcher>, <options> );
 		 *  	watch( <IEventDispatcher>, <resultEventType> ); 
-		 * 		watch( <IEventDispatcher>, <resultEventType>, <faultEventTypes[]>, );
-		 *  	watch( <IEventDispatcher>, <resultEventType>, <faultEventTypes[]>, <options> );
+		 * 		watch( <IEventDispatcher>, <resultEventType>, <faultEventTypes[]> );
+		 *  	watch( <IEventDispatcher>, <resultEventType>, <faultEventTypes[]>, <progressEventType> );
 		 * 
-		 * The <options> parameter is a hashmap of optional key/value pairs:
+		 * 		watch( <IEventDispatcher>, <resultEventType>, <faultEventTypes[]>, <options> );
+		 * 		watch( <IEventDispatcher>, <resultEventType>, <faultEventTypes[]>, <progressEventType>, <options> );
+		 * 
+		 * 
+		 * The <options> parameter is a hashmap of optional configuration parameters for 
+		 * the addEventListeners() calls:
 		 * 
 		 *   { 
 		 * 		types : {
@@ -58,12 +63,28 @@ package com.codecatalyst.promise
 						return args.length > j ? args[j] : defaultVal;
 					}
 					
-					var arg1 : String = getArg(0) as String,
-						arg2 : Array  = getArg(1) as Array;
+					// Create default configuration for the listen() method
+					// then extract any overrides.
 					
-					return 	arg1 && arg2 	? 	getArg(2) as Object || { }  :
-							arg1         	? 	getArg(1) as Object || { }  :  getArg(0) as Object || { };
-						
+					var config  : Object = {                                          
+											 types      : {  result:"result", faults:[ ], progress:{ type:null, path:null } },
+											 token      : {  path :null, expectedValue:null },               
+											 useCapture : false,                     
+											 priority   : 0                          
+										   };
+					
+					var	arg0 	: String = getArg(0) 		as String,	// <resultEventType>
+						arg1 	: Array  = getArg(1, [ ]) 	as Array,	// <faultEventTypes[ ]>
+						arg2    : String = getArg(2)        as String,	// <progressEventType>
+					
+						// <options> 
+						results : Object = 	arg2 ? config : getArg(3,config);	// <options>
+					
+					if (arg0 != null)	results.types.result 		= arg0;
+					if (arg1 != null)   results.types.faults 		= arg1;
+					if (arg2 != null)   results.types.progress.type = arg2;
+					
+					return results;
 				}
 			
 			// Build hashMap from variable arguments 
@@ -72,22 +93,25 @@ package com.codecatalyst.promise
 			
 			// Parse parameters from hashMap
 			
-			var resultType				: String = getObjectPropertyValue( options, "types.result", "result")   as String,
-				faultTypes				: Array  = getObjectPropertyValue( options, "types.faults", ["fault"])  as Array,
-				progressEventType 		: String = getObjectPropertyValue( options, "types.progress.type") 	 	as String,
-				progressEventProperty	: String = getObjectPropertyValue( options, "types.progress.path") 	 	as String,
-				eventTokenPropertyPath  : String = getObjectPropertyValue( options, "token.path") 				as String,
-				expectedTokenValue		: * 	 = getObjectPropertyValue( options, "token.expectedValue"),
-				useCapture			    : *      = getObjectPropertyValue( options, "useCapture", 	false),
-				priority				: *      = getObjectPropertyValue( options, "priority", 	0);
+			var resultType				: String = getObjectPropertyValue( options, "types.result", 		"result")   as String,
+				faultTypes				: Array  = getObjectPropertyValue( options, "types.faults", 		["fault"])  as Array,
+				progressEventType 		: String = getObjectPropertyValue( options, "types.progress.type", 	null) 		as String,
+				progressEventProperty	: String = getObjectPropertyValue( options, "types.progress.path")  			as String,
+				eventTokenPropertyPath  : String = getObjectPropertyValue( options, "token.path")  						as String,
+				expectedTokenValue		: * 	 = getObjectPropertyValue( options, "token.expectedValue", 	null),
+				useCapture			    : *      = getObjectPropertyValue( options, "useCapture", 			false),
+				priority				: *      = getObjectPropertyValue( options, "priority", 			0);
 			
 			// Call PromiseUtils.listen to build and configure a Deferred for the eventDispatcher
 			
 			return listen(	target, 
 							resultType, faultTypes, 
-							progressEventType, progressEventProperty, 
-							Boolean(useCapture), int(priority), 
-							eventTokenPropertyPath, expectedTokenValue
+							progressEventType, 
+							progressEventProperty, 
+							Boolean(useCapture), 
+							int(priority), 
+							eventTokenPropertyPath, 
+							expectedTokenValue
 						);
 		}
 		
@@ -144,9 +168,14 @@ package com.codecatalyst.promise
 			// Progress event handling closure.
 			function update( event:Event ):void
 			{
-				if ( checkToken(event) )
+				if ( !progressEventProperty ) 
 				{
-					deferred.update( event[ progressEventProperty ] );
+					deferred.update( event );
+					
+				} else {
+					var value : * = event.hasOwnProperty(progressEventProperty) ? event[progressEventProperty] : null;
+					
+					deferred.update.apply(deferred, value ? [value] : null);
 				}
 			}
 			
@@ -160,7 +189,7 @@ package com.codecatalyst.promise
 					dispatcher.removeEventListener( faultEventType, reject, useCapture );
 				}
 				
-				if ( ( progressEventType != null ) && ( progressEventProperty != null ) )
+				if ( progressEventType != null )
 					dispatcher.removeEventListener( progressEventType, update, useCapture );
 			}
 			
@@ -174,7 +203,7 @@ package com.codecatalyst.promise
 			}
 			
 			// Listen for progress event, if applicable.
-			if ( ( progressEventType != null ) && ( progressEventProperty != null ) )
+			if ( progressEventType != null )
 				dispatcher.addEventListener( progressEventType, update, useCapture, priority );
 			
 			return deferred.promise;
@@ -188,7 +217,7 @@ package com.codecatalyst.promise
 				
 				try {
 					for (var s:* in p) r = r[p[s]];
-				} catch(e:*) { r = target };
+				} catch(e:*) { r = defaultVal };
 				
 				return (!(r as String) || !(r as Number)) ? r : defaultVal;    			
 		}
