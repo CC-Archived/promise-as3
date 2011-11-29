@@ -1,10 +1,10 @@
 # Promises for Actionscript 3
 
-----
-## Introduction
-&nbsp; 
 
-Provides a AS3 library of futures as defined by [CommonJS](http://wiki.commonjs.org/wiki/Promises). 
+## Introduction
+
+
+The repository provides a AS3 library of futures as defined by [CommonJS](http://wiki.commonjs.org/wiki/Promises). 
 
 A promise (aka [Future](http://en.wikipedia.org/wiki/Futures_and_promises)) is an object thats acts as a proxy for a result that my not be initially known, usually because the computation of its value has not yet completed. Developers *defer* processing by returning a promise to respond later. A **promise** is essentially a read-only version of the **deferred** response.
 
@@ -21,8 +21,9 @@ A promise (aka [Future](http://en.wikipedia.org/wiki/Futures_and_promises)) is a
     * Can check resolve status
     * Can cancel (*only in AS3 version*)
 
+&nbsp;
 
-Popularized in the [jQuery](http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js) javascript library, Deferred(s) are now available for AS3 developers. This library emulates the jQuery v1.7 feature set of futures: Deferred, Promise, and Callbacks. And supports two syntactical approaches familiar to either jQuery users or Actionscript/Flex developers.
+Popularized in the [jQuery](http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js) javascript library, Deferred(s) are now available for AS3 developers. This library emulates the jQuery v1.7 feature set of futures: Deferred, Promise, and Callbacks. This library also supports two syntactical approaches familiar to either jQuery users or Actionscript/Flex developers.
  
 Flex developers often use components asynchronously:
 
@@ -47,12 +48,21 @@ The above components, unfortunately, do not have a consistent mechanism in which
 * AsyncToken
 * closures (aka callbacks)
 
+## Why Deferred(s)
+
 Now developers can employ `Deferred.as` to build promises of responses. The interface is always the same regardless of the component/mechanism used to fulfill the promise.
 
-&nbsp; 
+The biggest advantages are 
+
+1. Consistent, intuitive API for attaching handlers to asynchronous processes
+2. Ability to intercept and transform results before handlers are called
+3. Ability to chain futures in sequence
+4. Ability to process futures in parallel (aka batch processing)
+
+
 
 ## Using Deferred
-&nbsp;
+
 
 Deferred(s) and Promise(s) can be easily created programmatically with:
 
@@ -71,12 +81,31 @@ Or developers can use the shorthand, scoped approach:
     
 	// Attach handlers to promise for completion, rejection, notification, or cancellation
 
+&nbsp;
+
+Developers can attach handlers to Deferred(s) or Promise(s) instances using:
+
+* instance.**done**( doneFunc )
+* instance.**fail**( failFunc)
+* instance.**progress**( progressFunc )
+* instance.**always**( func )
+* instance.**then**( doneFunc, failFunc, progressFunc, cancelFunc )
+* instance.**pipe**( doneFunc, failFunc, progressFunc, cancelFunc )
+
+&nbsp;
+
+These callback functions (aka handlers ) will be invoked upon the following Deferred/Promise instance triggers:
+
+* instance.**resolve**()	
+* instance.**reject**()		
+* instance.**cancel**()		
+* instance.**notify**()
 
 
 
-&nbsp; 
+
 ## Use jQuery.as 
-&nbsp; 
+
 
 This library contains a jQuery wrapper class that enables developers to easily instantiate and use deferreds. With `jQuery.as`, developers now have full support for the succinct syntax offered within jQuery Javascript. Simply use:
 
@@ -206,17 +235,21 @@ Developers should note that the $.watch() also removes listeners and clears memo
 *  For details on uses of `pipe()` to intercept responses or sequentially chain asynchronous operations, please refer to the wiki documentation [Promise::pipe()]().
 
 
-&nbsp; 
-## Testing
-&nbsp; 
+## Testing & Builds
 
-Testing uses FlexUnit4... and actually includes ports of the same jQuery tests used to test the javascript library.
+** Use FlexUnit4 and FlashBuilder 4.6 **
+
+FlexUnit4 tests are continually updated to test the Promise-AS3 classes. Additionally the tests include ports of the same QUnit jQuery tests used to test the Javascript Deferreds. See:
+
+* [TestjQuery.as](https://github.com/CodeCatalyst/promise-as3/blob/develop/test/com/codecatalyst/promise/tests/TestjQuery.as) - ported tests for Deferred and Promise
+* [TestCallbacks.as](https://github.com/CodeCatalyst/promise-as3/blob/develop/test/com/codecatalyst/promise/tests/TestCallbacks.as) - ported tests for Callbacks
+
+** Use Ant ** 
+
+An [build.xml](https://github.com/CodeCatalyst/promise-as3/blob/develop/build.xml) script is provided that allows the Promise-AS3 library to be compiled and compressed for production use. The default build in the ANT script will not include any compiled FlexUnit tests.
 
   
 
-&nbsp; 
- 
-----
 ## Learning Resources
 &nbsp; 
 
