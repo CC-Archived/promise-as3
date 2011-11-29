@@ -1016,7 +1016,7 @@ package com.codecatalyst.promise.tests
 		}	
 		
 		
-		[Test(order=10.4, async, timeout="85", description="Test Promise::watch(<eventDispatcher>,null,<options>)")] 
+		[Test(order=10.4, async, timeout="200", description="Test Promise::watch(<eventDispatcher>,null,<options>)")] 
 		/**
 		 * Test Promise::watch() using a resultEventType and progressEventType strings
 		 */
@@ -1042,7 +1042,7 @@ package com.codecatalyst.promise.tests
 				checkUpdates(promise, true,  "timer", 3);
 				checkCancels(promise, false, null, 0);
 				
-			}, 55 );	
+			}, 60 );	
 		}
 		
 		// *****************************************************************************
