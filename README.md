@@ -6,12 +6,12 @@
 
 The repository provides a AS3 library of futures as defined by [CommonJS](http://wiki.commonjs.org/wiki/Promises). 
 
-A promise (aka [Future](http://en.wikipedia.org/wiki/Futures_and_promises)) is an object thats acts as a proxy for a result that my not be initially known, usually because the computation of its value has not yet completed. Developers *defer* processing by returning a promise to respond later. A **promise** is essentially a read-only version of the **deferred** response.
+A promise (aka [Future](http://en.wikipedia.org/wiki/Futures_and_promises)) is an object thats acts as a proxy for a result that my not be initially known, usually because the computation of its value has not yet completed. Developers *defer* processing by returning a promise to respond later. A **promise**is essentially a read-only version of the **deferred**response.
 
 * `new Deferred()`
     * can add callbacks
     * can be resolved or rejected
-    * can **promise()** to let you know what happened  
+    * can **promise()**to let you know what happened  
 &nbsp; 
  
 
@@ -177,7 +177,7 @@ $.watch() will work with
 * or your own custom, async component
 
 #### 
-** 1) Watching an AsyncToken**
+**1) Watching an AsyncToken**
 
 Let's consider an example RPC call loadEmployee() that returns an `AsyncToken` and a future `ResultEvent`. In this scenario, the developer wants to call `loadEmployee(<userID>)` and update a data model with the employee information once loaded:
 
@@ -197,7 +197,7 @@ With `$.watch()` we can easily watch for the ResultEvent, extract the employee v
 
 
 #### 
-** 2) Watching an EventDispatcher**
+**2) Watching an EventDispatcher**
 
 Let's consider a scenario in which we are loading an external XML data file. Consider the `URLLoader` example below:
 
@@ -229,7 +229,7 @@ Let's consider a scenario in which we are loading an external XML data file. Con
 Developers should note that the $.watch() also removes listeners and clears memory references when the future  is finished, rejected, or cancelled. This means that GC is transparently supported. 
 
 #### 
-** More…**
+**More…**
 
 *  For details and examples on using alias $.wait(), please refer to the wiki documentation [Promise::watch()]().
 *  For details on uses of `pipe()` to intercept responses or sequentially chain asynchronous operations, please refer to the wiki documentation [Promise::pipe()]().
@@ -237,14 +237,14 @@ Developers should note that the $.watch() also removes listeners and clears memo
 
 ## Testing & Builds
 
-** Use FlexUnit4 and FlashBuilder 4.6 **
+**Use FlexUnit4 and FlashBuilder 4.6 **
 
 FlexUnit4 tests are continually updated to test the Promise-AS3 classes. Additionally the tests include ports of the same QUnit jQuery tests used to test the Javascript Deferreds. See:
 
 * [TestjQuery.as](https://github.com/CodeCatalyst/promise-as3/blob/develop/test/com/codecatalyst/promise/tests/TestjQuery.as) - ported tests for Deferred and Promise
 * [TestCallbacks.as](https://github.com/CodeCatalyst/promise-as3/blob/develop/test/com/codecatalyst/promise/tests/TestCallbacks.as) - ported tests for Callbacks
 
-** Use Ant ** 
+**Use Ant **
 
 An [build.xml](https://github.com/CodeCatalyst/promise-as3/blob/develop/build.xml) script is provided that allows the Promise-AS3 library to be compiled and compressed for production use. The default build in the ANT script will not include any compiled FlexUnit tests.
 
