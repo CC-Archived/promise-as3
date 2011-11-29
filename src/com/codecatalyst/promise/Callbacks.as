@@ -153,14 +153,14 @@ package com.codecatalyst.promise
 				{
 					firingLength = list.length;
 					
-				} else if ( memory && memory !== true ) {
+				} else if ( memory && !stopped ) {
 					
 					// With memory, if we're not firing then
 					// we should call right away, unless previous
 					// firing was halted (stopOnFalse)
 					
 					firingStart = length;
-					fireWith( memory[ 0 ], memory[ 1 ] );
+					fireCallbacks( memory[ 0 ], memory[ 1 ] );
 				}
 			}
 			return this;
@@ -220,7 +220,7 @@ package com.codecatalyst.promise
 						stack.push( [ context, args ] );
 					}
 					
-				} else if ( !( flags.once && memory ) ) 
+				} else if ( !(flags.once && memory) ) 
 				{
 					fireCallbacks( context, args );
 					
@@ -294,7 +294,7 @@ package com.codecatalyst.promise
 						if ( stack && stack.length ) 
 						{
 							memory = stack.shift();
-							fireWith( memory[ 0 ], memory[ 1 ] );
+							fire( memory[ 0 ], memory[ 1 ] );
 						}
 						
 					} else if ( stopped )  {

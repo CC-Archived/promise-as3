@@ -201,31 +201,40 @@ With `$.watch()` we can easily watch for the ResultEvent, extract the employee v
 
 Let's consider a scenario in which we are loading an external XML data file. Consider the `URLLoader` example below:
 
-    // Load an external XML data file and save to our model.
-    // Watch loader instance and handle progress and completion events
+ 		/**
+		 * Use AS3 Deferred(s), we can easily `watch` a URLLoader
+		 * for a promised response. 
+		 *  
+		 * Load an external XML data file and save to our model.
+		 * Watch loader instance and handle progress and completion events
+		 */
+		public function loadCountries(url:String):void {
+  
+		    // Notice use of IIFE-like wrapper to create reference to $ macro
+		    var $       : Object     = jQuery();
     
-    var loader	: URLLoader	 = new URLLoader();
-    var promise : Promise	 = $.watch( loader, 
-                                        Event.COMPLETE, 
-                                        null, 
-                                        Event.PROGRESS);
+		    var loader  : URLLoader  = new URLLoader();
+		    var promise : Promise    = $.watch( loader, 
+		                                        Event.COMPLETE, 
+		                                        null, 
+		                                        Event.PROGRESS);
     
-         loader.load( new URLRequest(<someURL>) );
+		         loader.load( new URLRequest( url ) );
 
-         promise.then( function (event:Event){
-							 // Result handler called for URLLoader completes event
-							 // Use closure scope to access `loader` instance
+		         return promise.then( function (event:Event){
+		                                // Result handler called for URLLoader completes event
+		                                // Use closure scope to access `loader` instance
 
-	                         model.data = loader.data;
-	                     }, 
-	                     null, 
-	                     function (event:Event){
-                             // Progress handler called when data is received 
-							 // as the download operation progresses.
+		                                model.data = loader.data;
+		                              }, 
+		                              null, 
+		                              function (event:Event){
+		                                // Progress handler called when data is received 
+		                                // as the download operation progresses.
 
-                             // Update progress bar by 25% complete...
-					  });
-
+		                                // Update progress bar by 25% complete...
+		                            });
+		}
 Developers should note that the $.watch() also removes listeners and clears memory references when the future  is finished, rejected, or cancelled. This means that GC is transparently supported. 
 
 #### 

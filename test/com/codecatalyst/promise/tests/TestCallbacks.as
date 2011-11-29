@@ -89,7 +89,7 @@ package com.codecatalyst.promise.tests
 							"memory": 			  "XABC XABC XABCABCCC XA XBB XB XABA XC",
 							"unique": 			  "XABC X XABCA X XBB X XAB X",
 							"stopOnFalse": 		  "XABC X XABCABCC X XBB X XA X",
-							//"once memory": 		  "XABC XABC X XA X XA XABA XC",		//!!@Fixme - some error here
+							"once memory": 		  "XABC XABC X XA X XA XABA XC",		
 							"once unique": 		  "XABC X X X X X XAB X",
 							"once stopOnFalse":   "XABC X X X X X XA X",
 							"memory unique": 	  "XABC XA XABCA XA XBB XB XAB XC",

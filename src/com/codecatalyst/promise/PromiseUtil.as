@@ -238,7 +238,7 @@ package com.codecatalyst.promise
 					
 					for (var k:* in source)
 					{
-						var sChild : Object = isSimple( source[k] )    ? null           	 : source[k]; 
+						var sChild : Object = !isSimple( source[k] )   ? source[k]           : null; 
 						var tChild : Object = target.hasOwnProperty(k) ? target[k] as Object : null;
 						
 							tChild = isSimple(tChild) ? { } : tChild;
