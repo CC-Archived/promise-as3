@@ -237,14 +237,14 @@ Developers should note that the $.watch() also removes listeners and clears memo
 
 ## Testing & Builds
 
-**Use FlexUnit4 and FlashBuilder 4.6 **
+**Use FlexUnit4 and FlashBuilder 4.6**
 
 FlexUnit4 tests are continually updated to test the Promise-AS3 classes. Additionally the tests include ports of the same QUnit jQuery tests used to test the Javascript Deferreds. See:
 
 * [TestjQuery.as](https://github.com/CodeCatalyst/promise-as3/blob/develop/test/com/codecatalyst/promise/tests/TestjQuery.as) - ported tests for Deferred and Promise
 * [TestCallbacks.as](https://github.com/CodeCatalyst/promise-as3/blob/develop/test/com/codecatalyst/promise/tests/TestCallbacks.as) - ported tests for Callbacks
 
-**Use Ant **
+**Use Ant**
 
 An [build.xml](https://github.com/CodeCatalyst/promise-as3/blob/develop/build.xml) script is provided that allows the Promise-AS3 library to be compiled and compressed for production use. The default build in the ANT script will not include any compiled FlexUnit tests.
 
