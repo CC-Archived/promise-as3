@@ -7,11 +7,8 @@ package com.codecatalyst.promise
 	 * Utility methods related to Promises and adapting Flash and ActionScript asynchronous operations for use with Promises.
 	 * Possible invocations:
 	 * 
-	 * @see com.codecatalyst.util.AsyncTokenUtil#createPromise()
-	 * 
 	 * @author John Yanarella
 	 * @author Thomas Burleson
-	 * 
 	 */
 	public class PromiseUtil
 	{
@@ -25,8 +22,8 @@ package com.codecatalyst.promise
 		 *  	watch( <IEventDispatcher>, <resultEventType>, <faultEventTypes[]> || <faultEventType>, <progressEventType> );
 		 * 		watch( <IEventDispatcher>, <resultEventType>, <faultEventTypes[]> || <faultEventType>, <progressEventType> || <options> );
 		 * 
-		 * The <options> parameter is a hashmap of optional configuration parameters for 
-		 * the addEventListeners() calls:
+		 * The <options> parameter is a complex hashmap of optional configuration parameters that will be used 
+		 * a set of addEventListeners() calls:
 		 * 
 		 *   { 
 		 * 		types : {
@@ -68,11 +65,12 @@ package com.codecatalyst.promise
 			
 			// Call PromiseUtils.listen to build and configure a Deferred for the eventDispatcher
 			return listen(	target, 
-							resultType, faultTypes, 
+							resultType, 
+							faultTypes, 
 							progressEventType, 
 							progressEventProperty, 
-							Boolean(useCapture), 
-							int(priority), 
+							Boolean( useCapture ), 
+							int( priority ), 
 							eventTokenPropertyPath, 
 							expectedTokenValue
 						);
@@ -91,7 +89,15 @@ package com.codecatalyst.promise
 		 * 
 		 * NOTE: It is critical to specify the result event type and all possible fault event types to avoid introducing memory leaks.
 		 */
-		public static function listen( dispatcher:IEventDispatcher, resultEventType:String, faultEventTypes:Array, progressEventType:String = null, progressEventProperty:String = null, useCapture:Boolean = false, priority:int = 0, eventTokenPropertyPath:String = null, expectedTokenValue:* = null ):Promise
+		public static function listen( dispatcher			 :IEventDispatcher, 
+									   resultEventType		 :String  = "result", 
+									   faultEventTypes		 :Array   = null, 
+									   progressEventType	 :String  = null, 
+									   progressEventProperty :String  = null, 
+									   useCapture			 :Boolean = false, 
+									   priority				 :int     = 0, 
+									   eventTokenPropertyPath:String  = null, 
+									   expectedTokenValue	 :*       = null ):Promise
 		{
 			var deferred:Deferred = new Deferred();
 			
@@ -147,6 +153,8 @@ package com.codecatalyst.promise
 			{
 				dispatcher.removeEventListener( resultEventType, resolve, useCapture );
 				
+				faultEventTypes ||= [ ];
+
 				for each ( var faultEventType:String in faultEventTypes )
 				{
 					dispatcher.removeEventListener( faultEventType, reject, useCapture );
@@ -192,9 +200,11 @@ package com.codecatalyst.promise
 		
 		
 		/**
-		 * Simulate method overrides and parse arguments
-		 * to build a valid set of watch options. Merge overrides
-		 * into a default value hashmap.
+		 * Simulate method overrides in `watch()` by build acceptable complex hashmap of options. 
+		 * Parse arguments to build a valid set of watch options and merge overrides into hashmap of default values.
+		 * 
+		 * The options hashmap will then be introspected for parameters to call the `listen()` with its
+		 * fixed list of arguments.
 		 */
 		static protected function buildWatchOptions(args:Array, defaults:Object=null):Object {
 			

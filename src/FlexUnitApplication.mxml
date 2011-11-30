@@ -9,12 +9,14 @@
 				layout="absolute">
 	<fx:Script>
 		<![CDATA[
-			import com.codecatalyst.promise.PromiseSuite;
+			import com.codecatalyst.promise.tests.TestDeferred;
+			import org.flexunit.runner.Request;
 			
 			public function currentRunTestSuite():Array
 			{
 				var testsToRun:Array = new Array();
-				testsToRun.push(com.codecatalyst.promise.PromiseSuite);
+				
+				testsToRun.push(Request.methods(com.codecatalyst.promise.tests.TestDeferred,["testResolve_asynch"]));
 				return testsToRun;
 			}
 			

@@ -36,6 +36,7 @@ package com.codecatalyst.promise
 	 * Inspired by jQuery's Deferred implementation.
 	 * 
  	 * @author John Yanarella
+ 	 * @author Thomas Burleson  
 	 */
 	public class Deferred extends EventDispatcher
 	{
@@ -138,7 +139,7 @@ package com.codecatalyst.promise
 		 */
 		public function get status():*
 		{
-			return _progress;
+			return notifyDispatcher.lastMemory;
 		}
 		
 		[Bindable( "stateChanged" )]
@@ -147,7 +148,7 @@ package com.codecatalyst.promise
 		 */
 		public function get result():*
 		{
-			return _result;
+			return resolveDispatcher.lastMemory;
 		}
 		
 		[Bindable( "stateChanged" )]
@@ -156,7 +157,7 @@ package com.codecatalyst.promise
 		 */
 		public function get error():*
 		{
-			return _error;
+			return rejectDispatcher.lastMemory;
 		}
 		
 		[Bindable( "stateChanged" )]
@@ -165,72 +166,8 @@ package com.codecatalyst.promise
 		 */
 		public function get reason():*
 		{
-			return _reason;
+			return cancelDispatcher.lastMemory;
 		}
-		
-		// ========================================
-		// Protected properties
-		// ========================================
-		
-		/**
-		 * Backing variable for <code>promise</code> property.
-		 */
-		protected var _promise:Promise = null;
-		
-		/**
-		 * Backing variable for <code>progress</code.
-		 */
-		protected var _progress:* = null;
-		
-		/**
-		 * Backing variable for <code>result</code.
-		 */
-		protected var _result:* = null;
-		
-		/**
-		 * Backing variable for <code>error</code.
-		 */
-		protected var _error:* = null;
-		
-		/**
-		 * Backing variable for <code>reason</code.
-		 */
-		protected var _reason:* = null;
-		
-		/**
-		 * Deferred _state.
-		 * 
-		 * @see #STATE_PENDING
-		 * @see #STATE_RESOLVED
-		 * @see #STATE_REJECTED
-		 * @see #STATE_CANCELLED
-		 */
-		protected var _state:String = Deferred.PENDING_STATE;
-		
-		/**
-		 * Callbacks to be called when this Deferred is updated.
-		 */
-		protected var progressCallbacks:Array = [];
-		
-		/**
-		 * Callbacks to be called when this Deferred is resolved.
-		 */
-		protected var resultCallbacks:Array = [];
-		
-		/**
-		 * Callbacks to be called when this Deferred is rejected.
-		 */
-		protected var errorCallbacks:Array = [];
-		
-		/**
-		 * Callbacks to be called when this Deferred is cancelled.
-		 */
-		protected var cancelCallbacks:Array = [];
-		
-		/**
-		 * Callbacks to be called when this Deferred is resolved or rejected.
-		 */
-		protected var alwaysCallbacks:Array = [];
 		
 		// ========================================
 		// Constructor
@@ -242,335 +179,308 @@ package com.codecatalyst.promise
 		public function Deferred(callback:Function=null)
 		{
 			super();
+			init();
 			
-			_promise = new Promise( this );
-			
-			if ( callback ) 
+			if ( callback != null ) 
 			{
 				callback.apply( this, callback.length ? [this] : [ ] );
 			}
 		}
 		
-		// ========================================
-		// Public methods
-		// ========================================
-		
-		/**
-		 * Alias to support jQuery API
-		 */
-		public function done( callback:Function=null ) :Deferred {
-			return onResult(callback);
-		}
-		
-		/**
-		 * Alias to support jQuery API
-		 */
-		public function fail( callback:Function=null ) :Deferred {
-			return onError(callback);
-		}
-		
-		/**
-		 * Alias to support jQuery API
-		 */
-		public function progress( callback:Function=null ) :Deferred {
-			return onProgress(callback);
-		}
-		
 
+		
+		// ========================================
+		// Public Callback-registration Methods
+		// ========================================
+		
+		/**
+		 * Alias to support jQuery API
+		 * 
+		 * @param callbacks Function or Function[ ]
+		 */
+		public function done( callbacks:*=null ) :Deferred {
+			return onResult(callbacks);
+		}
+		
+		/**
+		 * Alias to support jQuery API
+		 * 
+		 * @param callbacks Function or Function[ ]
+		 */
+		public function fail( callbacks:*=null ) :Deferred {
+			return onError(callbacks);
+		}
+		
+		/**
+		 * Alias to support jQuery API
+		 * 
+		 * @param callbacks Function or Function[ ]
+		 */
+		public function progress( callbacks:*=null ) :Deferred {
+			return onProgress(callbacks);
+		}
 		
 		/**
 		 * Register callbacks to be called when this Deferred is resolved, rejected, cancelled and updated.
 		 */
 		public function then( resultCallback:Function=null, errorCallback:Function = null, progressCallback:Function = null, cancelCallback:Function = null ):Deferred
 		{
-			onResult( resultCallback );
-			onError( errorCallback );
-			onProgress( progressCallback );
-			onCancel( cancelCallback );
-			
-			return this;
+			return onResult  ( resultCallback   ).
+				   onError   ( errorCallback    ).
+				   onProgress( progressCallback ).
+				   onCancel  ( cancelCallback   );
 		}
 		
 		/**
-		 * Registers a callback to be called when this Deferred is either resolved, rejected or cancelled.
+		 * Registers a callback to be called when this Deferred is 
+		 * either resolved, rejected or cancelled.
+		 * 
+		 * @param callbacks Function or Function[ ]
 		 */
-		public function always( alwaysCallback:Function=null):Deferred
+		public function always( callbacks:*=null ):Deferred
 		{
-			if ( alwaysCallback != null )
-			{
-				if ( pending )
-				{
-					alwaysCallbacks.push( alwaysCallback );
-				}
-				else if ( resolved)
-				{
-					notifyCallbacks( [ alwaysCallback ], result );
-				}
-				else if ( rejected )
-				{
-					notifyCallbacks( [ alwaysCallback ], error );
-				}
-				else if ( cancelled )
-				{
-					notifyCallbacks( [ alwaysCallback ], reason );
-				}
-			}
-				
+			onResult  ( callbacks );
+			onError	  ( callbacks );
+			onCancel  ( callbacks );
+			
 			return this;
 		}
 		
 		/**
 		 * Utility method to filter and/or chain Deferreds.
 		 */
-		public function pipe( resultCallback:Function=null, errorCallback:Function = null, progressCallback:Function=null ):Promise
+		public function pipe( fnResolve:*=null, fnReject:*=null, fnUpdate:*=null, fnCancel:*=null ):Promise
 		{
-			var deferred:Deferred = new Deferred();
+			// Create closure reference to `this` context
 			
-			then(
-				function ( result:* ):void
-				{
-					if ( resultCallback != null )
-					{
-						var returnValue:* = resultCallback( result );
-						if ( returnValue is Deferred )
-						{
-							returnValue.promise.then( deferred.resolve, deferred.reject, deferred.update, deferred.cancel );
-						}
-						else if ( returnValue is Promise )
-						{
-							returnValue.then( deferred.resolve, deferred.reject, deferred.update, deferred.cancel );
-						}
-						else
-						{
-							deferred.resolve( returnValue );
-						}
-					}
-					else
-					{
-						deferred.resolve( result );
-					}
-				},
-				function ( error:* ):void
-				{
-					if ( errorCallback != null )
-					{
-						var returnValue:* = errorCallback( error );
-						if ( returnValue is Deferred )
-						{
-							returnValue.promise.then( deferred.resolve, deferred.reject, deferred.update, deferred.cancel );
-						}
-						else if ( returnValue is Promise )
-						{
-							returnValue.then( deferred.resolve, deferred.reject, deferred.update, deferred.cancel );
-						}
-						else
-						{
-							deferred.reject( returnValue );
-						}
-					}
-					else
-					{
-						deferred.reject( error );
-					}
-				},
-				function ( update:* ):void
-				{
-					if ( progressCallback != null )
-					{
-						var returnValue:* = progressCallback( update );
-						if ( returnValue is Deferred )
-						{
-							returnValue.promise.then( deferred.resolve, deferred.reject, deferred.update, deferred.cancel );
-						}
-						else if ( returnValue is Promise )
-						{
-							returnValue.then( deferred.resolve, deferred.reject, deferred.update, deferred.cancel );
-						}
-						else
-						{
-							deferred.update( returnValue );
-						}
-					}
-					else
-					{
-						deferred.update( update );
-					}
-				},
-				function ( reason:* ):void
-				{
-					deferred.cancel( reason );
-				}
-			);
+			var origin : Deferred = this;	
 			
-			return deferred.promise;
-		}
-		
-		/**
-		 * Registers a callback to be called when this Deferred is updated.
-		 */
-		public function onProgress( progressCallback:Function ):Deferred
-		{
-			if ( progressCallback != null )
-			{
-				if ( pending )
-				{
-					progressCallbacks.push( progressCallback );
+			// Return wrapper Deferred that will be triggered when `origin` responds 
+			// via origin.resolve(), origin.reject(), origin.update(), or origin.cancel()
+			
+			return new Deferred( function( dfd:Deferred ):void {
+				
+				iterate( 
+					{
+						 done 		: [fnResolve, "resolve"],
+						 fail 		: [fnReject,  "reject"],
+						 progress	: [fnUpdate,  "notify"],
+						 onCancel   : [fnCancel,  "cancel"]
+				  	}, 
+					function (handler:String, data:Array):void {
+						
+						var func     : *      = data[0],
+						    action   : String = data[1];
 					
-					if ( status != null )
-						notifyCallbacks( [ progressCallback ], status );
-				}
-			}
-			
-			return this;
+						if (func is Function) 
+						{	
+							// When current/origin future responds, then call the func() 
+							
+							origin[handler]( function(...args):void {
+								
+								// func() could produce another promise or a value that must be <xxx>With()
+								
+								var val     : *       = func.apply(origin, args),
+								    promise : Promise = (val is Deferred) ? Deferred(val).promise   : 
+														(val is Promise)  ? Promise(val)			: null;
+								
+								if ( promise ) {
+									
+									promise.then(dfd.resolve, dfd.reject, dfd.update, dfd.cancel );
+									
+								} else {
+									// Call the resolveWith(), rejectWith(), etc functions
+									
+									dfd[action + "With"]( this==origin ? dfd : origin, [ val ] ); 
+								}
+							});
+							
+						} else {
+							// e.g. this.done( dfd.resolve )
+							
+							origin[handler]( dfd[action] );
+						}
+					}
+				);
+				
+			}).promise;
 		}
-		
 		
 		/**
 		 * Registers a callback to be called when this Deferred is resolved.
+		 * 
+		 * @param callbacks Function or Function[ ]
 		 */
-		public function onResult( callback:Function ):Deferred
+		public function onResult( callbacks:* ):Deferred
 		{
-			if ( callback != null )
-			{
-				if ( pending && !contains(resultCallbacks,callback))
-				{
-					resultCallbacks.push( callback );
-				}
-				else if ( resolved )
-				{
-					notifyCallbacks( [ callback ], result );
-				}
-			}
-			
+			resolveDispatcher.add( callbacks );
 			return this;
 		}
 		
 		/**
 		 * Registers a callback to be called when this Deferred is rejected.
+		 * 
+		 * @param callbacks Function or Function[ ]
 		 */
-		public function onError( callback:Function ):Deferred
+		public function onError( callbacks:* ):Deferred
 		{
-			if ( callback != null )
-			{
-				if ( pending  && !contains(errorCallbacks,callback))
-				{
-					errorCallbacks.push( callback );
-				}
-				else if ( rejected )
-				{
-					notifyCallbacks( [ callback ], error );
-				}
-			}
-			
+			rejectDispatcher.add( callbacks );
+			return this;
+		}
+		
+		
+		/**
+		 * Registers a callback to be called when this Deferred is updated.
+		 * 
+		 * @param callbacks Function or Function[ ]
+		 */
+		public function onProgress( callbacks:* ):Deferred
+		{
+			notifyDispatcher.add( callbacks );
 			return this;
 		}
 		
 		
 		/**
 		 * Registers a callback to be called when this Deferred is cancelled.
+		 * 
+		 * @param callbacks Function or Function[ ]
 		 */
-		public function onCancel( cancelCallback:Function ):Deferred
+		public function onCancel( callbacks:* ):Deferred
 		{
-			if ( cancelCallback != null )
-			{
-				if ( pending )
-				{
-					cancelCallbacks.push( cancelCallback );
-				}
-				else if ( cancelled )
-				{
-					notifyCallbacks( [ cancelCallback ], reason );
-				}
-			}
-			
-			return this;
-		}
-		
-		/**
-		 * Update this Deferred and notifyCallbacks relevant callbacks.
-		 */
-		public function update( progress:*=null ):Deferred
-		{
-			if ( pending )
-			{
-				_progress = progress;
-				
-				notifyCallbacks( progressCallbacks, progress );
-			}
-			
+			cancelDispatcher.add( callbacks );
 			return this;
 		}
 		
 		
-
-		/**
-		 *  Same as update(); but alias is useful to match Javascript API
-		 *
-		 *  @see ::update()
-		 */ 
-		public function notify( progress:*=null ):Deferred 
-		{
-			return update( progress );
-		}
+		// *******************************************************************
+		// Public actions/triggers
+		// *******************************************************************
+		
 		
 		/**
 		 * Resolve this Deferred and notifyCallbacks relevant callbacks.
 		 */
-		public function resolve( results:*=null ):Deferred
+		public function resolve(...args):Deferred
 		{
-			if ( pending )
-			{
-				_result = results;
-				
-				setState( Deferred.RESOLVED_STATE );
-				
-				notifyCallbacks( resultCallbacks.concat( alwaysCallbacks ), results );
-				releaseCallbacks();
-			}
-			
+			resolveDispatcher.fire.apply(null, args);
 			return this;
 		}
 		
 		/**
 		 * Reject this Deferred and notifyCallbacks relevant callbacks.
 		 */
-		public function reject( error:*=null ):Deferred
+		public function reject(...args):Deferred
 		{
-			if ( pending )
-			{
-				_error = error;
-				
-				setState( Deferred.REJECTED_STATE );
-				
-				notifyCallbacks( errorCallbacks.concat( alwaysCallbacks ), error );
-				releaseCallbacks();
-			}
-			
+			rejectDispatcher.fire.apply(null, args);
+			return this;
+		}
+		
+		/**
+		 * Update this Deferred and notifyCallbacks relevant callbacks.
+		 */
+		public function update(...args):Deferred
+		{
+			notifyDispatcher.fire.apply(null, args);
+			return this;
+		}
+		
+		/**
+		 *  Same as update(); but alias is useful to match Javascript API
+		 *
+		 *  @see ::update()
+		 */ 
+		public function notify(...args):Deferred
+		{
+			notifyDispatcher.fire.apply(null, args);
 			return this;
 		}
 		
 		/**
 		 * Cancel this Deferred and notifyCallbacks relevant callbacks.
 		 */
-		public function cancel( reason:*=null ):Deferred
+		public function cancel( ...args):Deferred
 		{
-			if ( pending )
-			{
-				_reason = reason;
-				
-				setState( Deferred.CANCELLED_STATE );
-				
-				notifyCallbacks( cancelCallbacks.concat( alwaysCallbacks ), reason );
-				releaseCallbacks();
-			}
-			
+			cancelDispatcher.fire.apply(null, args);
 			return this;
 		}
+		
+		// ***************************************************************
+		// Special methods used by the pipe() feature
+		// ***************************************************************
+		
+		public function resolveWith(context:Object,args:Array):Deferred 
+		{
+			resolveDispatcher.fireWith(context,args);
+			return this;
+		}
+		
+		public function rejectWith(context:Object,args:Array):Deferred 
+		{
+			rejectDispatcher.fireWith(context,args);
+			return this;
+		}
+		
+		public function notifyWith(context:Object,args:Array):Deferred 
+		{
+			notifyDispatcher.fireWith(context,args);
+			return this;
+		}
+			
+			
+		public function cancelWith(context:Object,args:Array):Deferred 
+		{
+			cancelDispatcher.fireWith(context,args);
+			return this;
+		}
+		
 		
 		// ========================================
 		// Protected methods
 		// ========================================
 		
+		/**
+		 * Configure the callbacks and then add `actions` to be performed
+		 * when resolved, rejected, or cancelled. 
+		 */
+		protected function init():void {
+			
+			_promise 			= new Promise( this );
+			
+			resolveDispatcher	= new Callbacks("once memory");
+			rejectDispatcher	= new Callbacks("once memory");
+			notifyDispatcher	= new Callbacks("memory");
+			cancelDispatcher	= new Callbacks("once memory");
+			
+			// Add actions to be triggered when resolved!
+			
+			resolveDispatcher.add(
+				function():void  { setState( Deferred.RESOLVED_STATE ); },
+				function():void  { rejectDispatcher.disable(); 			},
+				function():void  { notifyDispatcher.lock(); 			},
+				function():void  { cancelDispatcher.disable(); 			} 
+			);
+			
+			// Add actions to be triggered when rejected!
+			
+			rejectDispatcher.add(
+				function():void  { resolveDispatcher.disable(); 		},
+				function():void  { setState( Deferred.REJECTED_STATE ); },
+				function():void  { notifyDispatcher.lock(); 			},
+				function():void  { cancelDispatcher.disable(); 			} 
+			);
+			
+			// Add actions to be triggered when cancelled!
+			
+			cancelDispatcher.add(
+				function():void  { resolveDispatcher.disable(); 		},
+				function():void  { rejectDispatcher.disable(); 			},
+				function():void  { notifyDispatcher.lock(); 			},
+				function():void  { setState( Deferred.CANCELLED_STATE );} 
+			);
+			
+		}
+	
 		/**
 		 * Set the _state for this Deferred.
 		 * 
@@ -589,46 +499,59 @@ package com.codecatalyst.promise
 		}
 		
 		/**
-		 * Notify the specified callbacks, optionally passing the a reference to this Deferred and the specified value.
+		 * For each item in `list` call the `iterator` function
 		 */
-		protected function notifyCallbacks( callbacks:Array, value:* ):void
-		{
-			for each ( var callback:Function in callbacks )
+		protected function iterate( list:Object, iterator:Function) : void {
+			/**
+			 * Note: In AS3, Typed-Class properties cannot be enumerated this way
+			 *       but this works for array and dynamic objects
+			 */
+			for (var key:* in list)
 			{
-				switch ( callback.length )
-				{
-					case 2:
-						callback( promise, value );
-						break;
-					
-					case 1:
-						callback.call(this, value );
-						break;
-					
-					default:
-						callback.call(this);
-						break;
-				}
+				iterator.call( null, key, list[key] );
 			}
 		}
+
+		// ========================================
+		// Protected properties
+		// ========================================
 		
 		/**
-		 * Release references to all callbacks registered with this Deferred.
+		 * Backing variable for <code>promise</code> property.
 		 */
-		protected function releaseCallbacks():void
-		{
-			resultCallbacks   = [];
-			errorCallbacks    = [];
-			progressCallbacks = [];
-			cancelCallbacks   = [];
-			alwaysCallbacks   = [];
-		}
+		protected var _promise:Promise = null;
+		
 		
 		/**
-		 * Utility methods to simulate Array.contains() 
+		 * Deferred _state.
+		 * 
+		 * @see #STATE_PENDING
+		 * @see #STATE_RESOLVED
+		 * @see #STATE_REJECTED
+		 * @see #STATE_CANCELLED
 		 */
-		private function contains(list:Array,item:*):Boolean {
-			return (list.indexOf(item) > -1)
-		}
+		protected var _state:String = Deferred.PENDING_STATE;
+		
+		/**
+		 * Callbacks to be called when this Deferred is resolved.
+		 */
+		protected var resolveDispatcher:Callbacks;;
+		
+		/**
+		 * Callbacks to be called when this Deferred is rejected.
+		 */
+		protected var rejectDispatcher:Callbacks;;
+		
+		/**
+		 * Callbacks to be called when this Deferred is updated.
+		 */
+		protected var notifyDispatcher:Callbacks;;
+		
+		/**
+		 * Callbacks to be called when this Deferred is cancelled.
+		 */
+		protected var cancelDispatcher:Callbacks;;
+		
+		
 	}
 }

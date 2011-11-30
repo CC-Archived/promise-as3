@@ -39,6 +39,7 @@ package com.codecatalyst.promise
 	 * Inspired by jQuery's Promise implementation.
 	 * 
 	 * @author John Yanarella
+	 * @author Thomas Burleson  
 	 */
 	public class Promise extends EventDispatcher
 	{
@@ -155,6 +156,12 @@ package com.codecatalyst.promise
 		public static function when( ...promises ):Promise
 		{
 			var deferred:Deferred = new Deferred();
+			
+			// In the scenario where instance.when() is called with NOTHING to watch
+			if (promises.length < 1)  {
+				deferred.resolve();
+			}
+
 
 			// Special handling for when an Array of Promises is specified instead of variable numbe of Promise arguments.
 			if ( ( promises.length == 1 ) && ( promises[ 0 ] is Array ) )
@@ -198,34 +205,46 @@ package com.codecatalyst.promise
 			
 			var progressValues:Array = new Array( pendingPromiseCount );
 			var resultValues:Array   = new Array( pendingPromiseCount );
+
+				/**
+				 * Use closure to manage promise reference in the then() handlers
+				 */
+				function _watchPromise(promise) : void {
+					promise.then(
+								// All promises must resolve() before the when() resolves
+						
+								function ( result:* ):void {
+									resultValues[ promises.indexOf( promise ) ] = result;
+									
+									pendingPromiseCount--;
+									if ( pendingPromiseCount == 0 )
+										deferred.resolve.apply(deferred, resultValues );
+								},
+								
+								// Any promise reject(), rejects the when()
+								
+								function ( error:* ):void {
+									deferred.reject( error );
+								},
+								
+								function ( promise:Promise, update:* ):void {
+									progressValues[ promises.indexOf( promise ) ] = update;
+									
+									deferred.notify.apply(deferred, progressValues );
+								},
+								
+								// Any promise cancel(), cancels the when()
+								
+								function ( reason:* ):void {
+									deferred.cancel( reason );
+								}
+							);
+				};
+				
 			
 			for each ( var promise:Promise in promises )
 			{
-				promise
-					.then(
-						function ( promise:Promise, result:* ):void
-						{
-							resultValues[ promises.indexOf( promise ) ] = result;
-							
-							pendingPromiseCount--;
-							if ( pendingPromiseCount == 0 )
-								deferred.resolve( resultValues );
-						},
-						function ( error:* ):void
-						{
-							deferred.reject( error );
-						},
-						function ( promise:Promise, update:* ):void
-						{
-							progressValues[ promises.indexOf( promise ) ] = update;
-							
-							deferred.update( progressValues );
-						},
-						function ( reason:* ):void
-						{
-							deferred.cancel( reason );
-						}
-					);
+				_watchPromise(promise);
 			}
 			
 			return deferred.promise;
@@ -269,7 +288,7 @@ package com.codecatalyst.promise
 						
 						args.shift();
 						
-						result = func.apply(null, args.length ? args : null);
+						result = func.apply(null, args);
 						args   = [ ];
 					}
 					
@@ -281,12 +300,12 @@ package com.codecatalyst.promise
 					clearInterval(timer);
 
 					// Call the specified function (if any)
-					var result : * = doInlineCallback();
-					var params : * = ((args.length==1) && (args[0] is Object)) ? args[0] : args; 
+					
+					var response : * = doInlineCallback();
 					
 					// Since resolve() expects a resultVal == *, we use the .call() invocation
 					
-					dfd.resolve.call( dfd, !args.length  ? result : params );
+					dfd.resolve.apply( dfd, response ? [response] : args.length ? args : null );
 					
 				}, delay );
 				

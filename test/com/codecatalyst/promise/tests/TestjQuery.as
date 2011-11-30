@@ -21,10 +21,8 @@ package com.codecatalyst.promise.tests
 	 * Issues wrt jQuery code:
 	 * 
 	 *   1) isResolved(), isRejected()          --> resolved, rejected
-	 *   2) $.Deferred().resolve( val1, val2 )	--> $.Deferred().resolve( [val1, val2] )
-	 *   3) $.Deffered().then( function(a,b)    --> $.Deferred().then( function( d:Array )
-	 * 
-	 *   4) Unable to get Test 10 to work properly as expected
+	 *   2) `this` context in Deferred.then() is NOT the deferred instance
+	 *   3) Unable to get Test 10 to work properly as expected
 	 *
 	 */
 	public class TestjQuery
@@ -66,27 +64,29 @@ package com.codecatalyst.promise.tests
 			initCounters();
 			expect( 22 );
 		
-			$.Deferred().resolve().then( function() {
+			var dfd = $.Deferred().resolve()
+			dfd.then( function() {
 				ok( true , "Success on resolve" );
-				ok( this.resolved, "Deferred is resolved" );
-				strictEqual( this.state, "resolved", "Deferred is resolved (state)" );
+				ok( dfd.resolved, "Deferred is resolved" );
+				strictEqual( dfd.state, "resolved", "Deferred is resolved (state)" );
 			}, function() {
 				ok( false , "Error on resolve" );
 			}).always( function() {
 				ok( true , "Always callback on resolve" );
 			});
 			
-			$.Deferred().reject().then( function() {
+			dfd = $.Deferred().reject();
+			dfd.then( function() {
 				ok( false , "Success on reject" );
 			}, function() {
 				ok( true , "Error on reject" );
-				ok( this.rejected, "Deferred is rejected" );
-				strictEqual( this.state, "rejected", "Deferred is rejected (state)" );
+				ok( dfd.rejected, "Deferred is rejected" );
+				strictEqual( dfd.state, "rejected", "Deferred is rejected (state)" );
 			}).always( function() {
 				ok( true , "Always callback on reject" );
 			});
 			
-			$.Deferred( function( defer ) {
+			dfd = $.Deferred( function( defer ) {
 				ok( this === defer , "Defer passed as this & first argument" );
 				this.resolve( "done" );
 			}).then( function( value ) {
@@ -122,7 +122,7 @@ package com.codecatalyst.promise.tests
 		public function test_jQueryDeferred_chainability():void 
 		{
 			
-			var methods = "resolve reject notify cancel then always".split( " " ),
+			var methods = "resolve reject notify cancel".split( " " ),
 				defer   = $.Deferred();
 			
 			expect( methods.length );
@@ -143,23 +143,23 @@ package com.codecatalyst.promise.tests
 			expect(4);
 			
 			var defer = $.Deferred(),
-				piped = defer.pipe(function( data) { 		// a, b ) {
-					return data[0] * data[1];				// return a * b;
+				piped = defer.pipe(function( a, b ) {
+					return a * b;
 				}),
 				value1,
 				value2,
 				value3;
 			
-			piped.done(function( result ) {
-				value3 = result;
+			piped.done(function( c ) {
+				value3 = c;
 			});
 			
-			defer.done( function( results ) {
-				value1 = results[0];
-				value2 = results[1];
+			defer.done( function(a,b) {
+				value1 = a;
+				value2 = b;
 			});
 			
-			defer.resolve( [2, 3] );
+			defer.resolve( 2, 3 );
 			
 			strictEqual( value1, 2, "first resolve value ok" );
 			strictEqual( value2, 3, "second resolve value ok" );
@@ -183,27 +183,27 @@ package com.codecatalyst.promise.tests
 			expect(4);
 			
 			var defer = $.Deferred(),
-				piped = defer.pipe( null, function( data) { 	// a, b ) {
-					return data[0] * data[1];					// return a * b;
+				piped = defer.pipe( null, function(a, b ) {
+					return a * b;
 				} ),
 				value1,
 				value2,
 				value3;
 			
-			piped.fail(function( result ) {
-				value3 = result;
+			piped.fail(function(c ) {
+				value3 = c;
 			});
 			
-			defer.fail( function( results ) {
-				value1 = results[0];
-				value2 = results[1];
+			defer.fail( function( a, b ) {
+				value1 = a;
+				value2 = b;
 			});
 			
-			defer.reject( [2, 3] );		// @Fixme: jQuery Qunit testing is `defer.reject( 2, 3 );`
+			defer.reject( 2, 3 );		
 			
-			strictEqual( value1, 2, "first reject value ok" );
-			strictEqual( value2, 3, "second reject value ok" );
-			strictEqual( value3, 6, "result of filter ok" );
+			strictEqual( 2, value1, "first reject value ok" );
+			strictEqual( 3, value2, "second reject value ok" );
+			strictEqual( 6, value3, "result of filter ok" );
 			
 			$.Deferred().done().pipe( null, function() {
 				ok( false, "pipe should not be called on resolve" );
@@ -222,23 +222,23 @@ package com.codecatalyst.promise.tests
 			expect(3);
 			
 			var defer = $.Deferred(),
-				piped = defer.pipe( null, null, function( data ) { 		// !! jQuery API supports function(a,b) 
-					return data[0] * data[1];
+				piped = defer.pipe( null, null, function( a,b ) { 		
+					return a*b;
 				}),
 				value1,
 				value2,
 				value3;
 			
-			piped.progress(function( result ) {
-				value3 = result;
+			piped.progress(function( c) {
+				value3 = c;
 			});
 			
-			defer.progress(function( results ) {
-				value1 = results[0];
-				value2 = results[1];
+			defer.progress(function( a,b) {
+				value1 = a;
+				value2 = b;
 			});
 			
-			defer.notify( [2, 3] );
+			defer.notify( 2, 3 );
 			
 			strictEqual( value1, 2, "first progress value ok" );
 			strictEqual( value2, 3, "second progress value ok" );
@@ -254,25 +254,25 @@ package com.codecatalyst.promise.tests
 			expect(3);
 			
 			var defer = $.Deferred(),
-				piped = defer.pipe(function( results ) {
+				piped = defer.pipe(function( a, b ) {
 					return $.Deferred(function( defer ) {
-						defer.reject( results[0]*results[1] );
+						defer.reject( a * b );
 					});
 				}),
 				value1,
 				value2,
 				value3;
 			
-			piped.fail(function( result ) {
-				value3 = result;
+			piped.fail(function( c ) {
+				value3 = c;
 			});
 			
-			defer.done(function( results ) {
-				value1 = results[0];
-				value2 = results[1];
+			defer.done(function( a,b ) {
+				value1 = a;
+				value2 = b;
 			});
 			
-			defer.resolve( [2, 3] );
+			defer.resolve( 2, 3 );
 			
 			strictEqual( value1, 2, "first resolve value ok" );
 			strictEqual( value2, 3, "second resolve value ok" );
@@ -289,25 +289,25 @@ package com.codecatalyst.promise.tests
 			expect(3);
 			
 			var defer = $.Deferred(),
-				piped = defer.pipe(null, function( results ) {
+				piped = defer.pipe(null, function( a, b ) {
 					return $.Deferred(function( defer ) {
-						defer.resolve( results[0]*results[1] );
+						defer.resolve( a*b );
 					});
 				}),
 				value1,
 				value2,
 				value3;
 			
-			piped.done(function( result ) {
-				value3 = result;
+			piped.done(function( c ) {
+				value3 = c;
 			});
 			
-			defer.fail(function( results ) {
-				value1 = results[0];
-				value2 = results[1];
+			defer.fail(function( a,b ) {
+				value1 = a;
+				value2 = b;
 			});
 			
-			defer.reject( [2, 3] );
+			defer.reject( 2, 3 );
 			
 			strictEqual( value1, 2, "first resolve value ok" );
 			strictEqual( value2, 3, "second resolve value ok" );
@@ -325,25 +325,25 @@ package com.codecatalyst.promise.tests
 			expect(3);
 			
 			var defer = $.Deferred(),
-				piped = defer.pipe(null, null, function( results ) {
+				piped = defer.pipe(null, null, function( a, b ) {
 					return $.Deferred(function( defer ) {
-						defer.resolve( results[0]*results[1] );
+						defer.resolve( a*b );
 					});
 				}),
 				value1,
 				value2,
 				value3;
 			
-			piped.done(function( result ) {
-				value3 = result;
+			piped.done(function( c ) {
+				value3 = c;
 			});
 			
-			defer.progress( function( results ) {
-				value1 = results[0];
-				value2 = results[1];
+			defer.progress( function( a,b ) {
+				value1 = a;
+				value2 = b;
 			});
 			
-			defer.notify( [2, 3] );
+			defer.notify( 2, 3 );
 			
 			strictEqual( value1, 2, "first resolve value ok" );
 			strictEqual( value2, 3, "second resolve value ok" );
@@ -357,18 +357,19 @@ package com.codecatalyst.promise.tests
 		[Test(order=9, description="jQuery.when")]
 		public function test_jQuery_when():void 
 		{
-			expect( 20 );
+			expect( 21 );
 			
 			// Some other objects
 			$.each( {
-				"an empty string": "",
-				"a non-empty string": "some string",
-				"zero": 0,
-				"a number other than zero": 1,
-				"true": true,
-				"false": false,
-				"null": null,
-				"a plain object": {}
+				"an empty string"			: "",
+				"a non-empty string"		: "some string",
+				"zero"						: 0,	
+				"a number other than zero"	: 1,
+				"true"						: true,
+				"false"						: false,
+				"null"						: null,
+				//"undefined"				: undefined,
+				"a plain object"			: {}
 				
 			} , function( message , value ) {
 				

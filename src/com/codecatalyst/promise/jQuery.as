@@ -131,18 +131,8 @@ package com.codecatalyst.promise
 							 * 
 							 * @see com.codecatalyst.util.promise.Promise#when()
 							 */
-							when : function ( ...promises ):Promise {
-										
-									 	return Promise.when.apply(null, promises)
-													  .pipe( function( results:Array ) {
-														  	// Filter only non-null elements
-
-														  	return results.filter( function (element, ...args):Boolean {
-																			 return (element != null);
-																		   });
-													  });
-								   }
-					     };
+							when : Promise.when
+						};
 	
 		return $;
 	}

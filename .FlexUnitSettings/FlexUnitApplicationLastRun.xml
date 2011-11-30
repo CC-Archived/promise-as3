@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testrun name="" >
 <testsuite  name="Default Test Suite" project="promise-as3">
-<testsuite name="com.codecatalyst.promise:PromiseSuite" type="testsuiteclass"/>
+<testsuite name="com.codecatalyst.promise.tests:TestDeferred" type="testcaseclass">
+<testcase name="testResolve_asynch" classname="com.codecatalyst.promise.tests:TestDeferred"/>
+</testsuite>
 </testsuite>
 <portNumber value="8765" />
 </testrun>

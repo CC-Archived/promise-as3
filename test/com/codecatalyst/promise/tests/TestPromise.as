@@ -352,7 +352,8 @@ package com.codecatalyst.promise.tests
 			var dfd    :Deferred = null,
 				promise:Promise  = null,
 				
-				pipeResolver = function( results ) { return "pipeResolve_" + results; },
+				pipeResolver = function( results ) { 
+					return "pipeResolve_" + results; },
 				pipeRejector = function( results ) { return "pipeReject_"  + results; },
 				pipeUpdate   = function( results ) { return "pipeUpdate_"  + results; };
 			
@@ -455,10 +456,10 @@ package com.codecatalyst.promise.tests
 			
 			dfd      = new Deferred().then( onResultHandler, onErrorHandler, onProgressHandler);
 			promise  = dfd.pipe( pipeResolver, pipeRejector, pipeUpdate )
-				.then( onResultHandler, onErrorHandler );	// no progressHandler or cancelHandler on pipe
+						  .then( onResultHandler, onErrorHandler );	// no progressHandler or cancelHandler on pipe
 			
 			dfd.notify( "4.1" )
-				.notify( "4.2" );
+			   .notify( "4.2" );
 			
 			checkResults(promise, false,  null, 			0);
 			checkRejects(promise, false,  null, 			0);
@@ -669,8 +670,11 @@ package com.codecatalyst.promise.tests
 			
 			Async.delayCall(this, function(){
 				
-				checkResults(promise, true,  null, 0); // Promise resolved with resolve() == null
-
+				checkResults(promise, true, promise.result, 0); 	// Promise resolved with empty Array
+				
+				Assert.assertTrue("Promise result is Array",		promise.result is Array);
+				Assert.assertTrue("Promise result is empty Array",	(promise.result as Array).length == 0);
+				
 				checkRejects(promise, false, null, 0);
 				checkUpdates(promise, false, null, 0);
 				checkCancels(promise, false, null, 0);
@@ -689,7 +693,12 @@ package com.codecatalyst.promise.tests
 			
 			Async.delayCall(this, function(){
 				
-				checkRejects(promise, false, null, 0);
+				checkResults(promise, true, promise.result, 0); 	// Promise resolved with empty Array
+				
+				Assert.assertTrue("Promise result is Array",		promise.result is Array);
+				Assert.assertTrue("Promise result is Array",		(promise.result as Array).length == 2);
+				Assert.assertTrue("Promise result[1] == 8.1",		(promise.result as Array)[1]     == 8.1);
+
 				checkUpdates(promise, false, null, 0);
 				checkCancels(promise, false, null, 0);
 				
@@ -701,7 +710,7 @@ package com.codecatalyst.promise.tests
 			},40);	
 		}	
 		
-		[Test(order=8.3, async, timeout="60", description="Test Promise::wait(delay,<function>)")] 
+		[Test(order=8.3, async, timeout="100", description="Test Promise::wait(delay,<function>)")] 
 		public function testWait_withFunction():void 
 		{
 			initCounters();
@@ -772,7 +781,10 @@ package com.codecatalyst.promise.tests
 				// Now create when() batch set...
 				
 				batch    = Promise.when( promise1, promise2 )
-					              .then( onResultHandler );
+					              .then( function( p1, p2) {
+								  		onResultHandler([p1,p2]);
+								  });
+								  
 				
 			Async.delayCall(this, function(){
 				
@@ -790,7 +802,7 @@ package com.codecatalyst.promise.tests
 			},50);	
 		}	
 		
-		[Test(order=9.2, async, timeout="100", description="Test Promise::when() with rejection")] 
+		[Test(order=9.2, async, timeout="200", description="Test Promise::when() with rejection")] 
 		/**
 		 * Test a promise rejection will stop all futures and report properly in
 		 * the when() handlers assigned. 
@@ -816,7 +828,7 @@ package com.codecatalyst.promise.tests
 				// Now create when() batch set...
 				
 				batch    = Promise.when( promise1, promise2, promise3 )
-								  .then( onResultHandler, onErrorHandler );
+								  .then( onResultHandler, onErrorHandler);
 			
 			Async.delayCall(this, function(){
 				
@@ -826,10 +838,10 @@ package com.codecatalyst.promise.tests
 				checkUpdates(batch, false, null, 0);
 				checkCancels(batch, false, null, 0);
 				
-			},50);	
+			},80);	
 		}
 		
-		[Test(order=9.3, description="Test Promise::when() with cancel")] 
+		[Test(order=9.3, async, timeout="100", description="Test Promise::when() with cancel")] 
 		/**
 		 * Test a promise cancellation will still propogate properly to a
 		 * when() handlers assigned via when().then() or when().done(). 
@@ -853,11 +865,14 @@ package com.codecatalyst.promise.tests
 								   
 				batch    = Promise.when( promise1, promise2, promise3 )
 								  .then( onResultHandler, onErrorHandler, null, onCancelHandler );
-			
-			checkResults(batch, false,  null,  		0);
-			checkRejects(batch, false, 	null, 		0);	// cancelled first; so rejection is ignored
-			checkUpdates(batch, false, 	null, 		0);
-			checkCancels(batch, true,  'cancel_2', 	1);
+
+			Async.delayCall(this, function(){
+				
+				checkResults(batch, false,  null,  		1);
+				checkRejects(batch, false, 	null, 		0);	// Cancelled first...	
+				checkUpdates(batch, false, 	null, 		0);
+				checkCancels(batch, true,  'cancel_2', 	1);
+			}, 60 );
 		}
 		
 		[Test(order=9.4, async, timeout="100", description="Test Promise::when() with functions")] 
@@ -874,7 +889,10 @@ package com.codecatalyst.promise.tests
 				func2Call= function(){ p2Result = "promise 2 result"; },
 				
 				batch = Promise.when( promise1, func2Call )
-							   .then( onResultHandler );
+							   .then( function(p1,f1) {
+								   onResultHandler([p1,f1]);
+							   });
+							   
 			
 			Async.delayCall(this, function(){
 				
@@ -903,7 +921,9 @@ package com.codecatalyst.promise.tests
 				promise1 = Promise.wait(30, p1Result).then( onResultHandler ),
 				
 				batch = Promise.when( promise1, 9.5 )
-			  				   .then( onResultHandler );
+			  				   .then( function(p1,val) {
+								   onResultHandler( [p1,val] );
+							   });
 			
 			Async.delayCall(this, function(){
 				
@@ -1049,12 +1069,12 @@ package com.codecatalyst.promise.tests
 		// Protected Methods
 		// *****************************************************************************
 		
-		protected function onResultHandler(promise:*, val:*):void	{	resultHitCount++;	alwaysHitCount++; }
-		protected function onErrorHandler( promise:*, val:*):void	{	errorHitCount++;	alwaysHitCount++; }
-		protected function onProgressHandler(promise:*, val:*):void	{	progressHitCount++;					  }
-		protected function onCancelHandler(promise:*, val:*):void	{	cancelHitCount++;	alwaysHitCount++; }
+		protected function onResultHandler(val:*):void	{	resultHitCount++;	alwaysHitCount++; }
+		protected function onErrorHandler( val:*):void	{	errorHitCount++;	alwaysHitCount++; }
+		protected function onProgressHandler(val:*):void{	progressHitCount++;					  }
+		protected function onCancelHandler(val:*):void	{	cancelHitCount++;	alwaysHitCount++; }
 		
-		protected function onAlwaysHandler(promise:*, val:*):void	{	alwaysHitCount++; alwaysReponse = val;	}
+		protected function onAlwaysHandler(val:*):void	{	alwaysHitCount++; alwaysReponse = val;}
 		
 		// *****************************************************************************
 		// Private Methods 

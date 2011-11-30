@@ -602,12 +602,14 @@ package com.codecatalyst.promise.tests
 		// Protected Methods
 		// *****************************************************************************
 		
-		protected function onResultHandler(promise:*, val:*):void	{	resultHitCount++;	alwaysHitCount++; }
-		protected function onErrorHandler( promise:*, val:*):void	{	errorHitCount++;	alwaysHitCount++; }
-		protected function onProgressHandler(promise:*, val:*):void	{	progressHitCount++;						}
-		protected function onCancelHandler(promise:*, val:*):void	{	cancelHitCount++;	alwaysHitCount++; }
+		protected function onResultHandler(val:*):void	{	
+			resultHitCount++;	alwaysHitCount++; 
+		}
+		protected function onErrorHandler(val:*):void	{	errorHitCount++;	alwaysHitCount++; }
+		protected function onProgressHandler(val:*):void{	progressHitCount++;						}
+		protected function onCancelHandler(val:*):void	{	cancelHitCount++;	alwaysHitCount++; }
 		
-		protected function onAlwaysHandler(promise:*, val:*):void	{	alwaysHitCount++; alwaysReponse = val;	}
+		protected function onAlwaysHandler(val:*):void	{	alwaysHitCount++; alwaysReponse = val;	}
 		
 		// *****************************************************************************
 		// Private Methods 

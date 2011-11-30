@@ -24,6 +24,8 @@ package com.codecatalyst.promise
 	 *
 	 *	stopOnFalse:	interrupt callings when a callback returns false
 	 *
+	 * @author Julian Aubourg	( jQuery Javascript version )
+	 * @author Thomas Burleson  ( AS3 port )
 	 */
 	public class Callbacks extends EventDispatcher
 	{
@@ -64,7 +66,19 @@ package com.codecatalyst.promise
 				memory = true;
 			}
 		}
+		
+		/**
+		 * Get last value(s) used with fireCallbacks() 
+		 * 
+		 */
+		public function get lastMemory():* {
+			var last : Array = 	memory as Array;
 			
+				// NOTE: last[0] == context
+			    //       last[1] == args
+			
+			return last ? last[1] : null;
+		}
 		
 		/**
 		 * Constructor
@@ -211,7 +225,7 @@ package com.codecatalyst.promise
 		 * Call all callbacks with the given context and arguments
 		 */
 		public function fireWith( context, args ):Callbacks {
-			if ( stack ) 
+			if ( !locked ) 
 			{
 				if ( firing ) 
 				{
@@ -233,8 +247,7 @@ package com.codecatalyst.promise
 		 * Call all the callbacks with the given arguments
 		 */
 		public function fire(...args):Callbacks {
-			fireWith( this, args );
-			return this;
+			return fireWith( this, args );
 		}
 		
 		// ****************************************************************************
@@ -276,13 +289,22 @@ package com.codecatalyst.promise
 			try {
 				dispatchEvent( new Event( STATE_CHANGED ) );
 				
-				for ( ; list && firingIndex < firingLength; firingIndex++ ) {
-					if ( list[ firingIndex ].apply( context, args ) === false && flags.stopOnFalse ) {
-						stopped = true; // Mark as halted
-						break;
+				try {
+					for ( ; list && firingIndex < firingLength; firingIndex++ ) {
+						
+						var func     : Function = list[ firingIndex ] as Function;
+						var returned : * 		= func.apply( context, args );
+						
+						if ( flags.stopOnFalse && (returned===false) ) {
+							stopped = true; // Mark as halted
+							break;
+						}
 					}
+				} catch( e:Error )  { 
+					trace(e.message); 
 				}
 			}
+			
 			finally {
 				
 				firing = false;
