@@ -162,9 +162,9 @@ package com.codecatalyst.promise
 			    resolvedValues  :Array    = new Array( numPending ),
 			    lastNotifyValue :Array    = new Array( numPending ),
 			    deferred	    :Deferred = new Deferred(function(dfd){
-								// If no promise, immediately resolve
-								return !promises.length && dfd.resolve();			
-							});
+								    // If no promise, immediately resolve
+								    return !promises.length && dfd.resolve();			
+							    });
 
 			for each ( var promise:Promise in promises )
 			{
