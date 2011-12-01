@@ -158,13 +158,13 @@ package com.codecatalyst.promise
 				// Insure we have an array of promises
 				promises = sanitize(promises);
 			
-			var numPending		:int      = promises.length,
-			    resolvedValues	:Array 	  = new Array( numPending ),
-				lastNotifyValue :Array 	  = new Array( numPending ),
-				deferred		:Deferred = new Deferred(function(dfd){
-												// If no promise, immediately resolve
-												return !promises.length && dfd.resolve();			
-											});
+			var numPending	    :int      = promises.length,
+			    resolvedValues  :Array    = new Array( numPending ),
+			    lastNotifyValue :Array    = new Array( numPending ),
+			    deferred	    :Deferred = new Deferred(function(dfd){
+								// If no promise, immediately resolve
+								return !promises.length && dfd.resolve();			
+							});
 
 			for each ( var promise:Promise in promises )
 			{
@@ -287,25 +287,25 @@ package com.codecatalyst.promise
 		 * 
 		 * The <options> parameter is a hashmap of optional key/value pairs:
 		 * 
-		 *   { 
+		 *          { 
 		 * 		useCapture : <boolean>,
-		 * 	    priority   : <int>,
+		 * 	        priority   : <int>,
 		 * 		types 	   : {
-		 * 						result 		: <string>,
-		 * 						faults 		: [ <string> ],
-		 * 						progress	: {
-		 * 										type : <string>,
-		 * 										path : <string>
-		 * 				 					  }
-		 * 				     },
+		 * 				result 		: <string>,
+		 * 				faults 		: [ <string> ],
+		 * 				progress	: {
+		 * 							type : <string>,
+		 * 							path : <string>
+		 * 				 		  }
+		 * 			     },
 		 * 
 		 * 		// Token options used to filter only specific event instances of `type`
 		 * 
 		 * 		token  	   : {
-		 * 						path          : <string>,
-		 * 						expectedValue : *
-		 *               	 }
-		 *   }
+		 * 				path          : <string>,
+		 * 				expectedValue : *
+		 *               	     }
+		 *          }
 		 * 
 		 * 
 		 * @param args Array of optional parameters; only used when the target is an IEventDispatcher
@@ -320,30 +320,30 @@ package com.codecatalyst.promise
 					
 				case Function   :
 					return new Deferred( function(dfd) {
-								var results = Function(target).apply(null,args);
+						var results = Function(target).apply(null,args);
 								
-								// Could be a Promise-generator or a `normal` function
+						// Could be a Promise-generator or a `normal` function
 								
-								if (results is Promise) 
-								{
-									Promise(results)
-										.pipe( function(value) { 
-											return dfd.resolve(value); 
-										});
+						if (results is Promise) 
+						{
+							Promise(results)
+								.pipe( function(value) { 
+									return dfd.resolve(value); 
+								});
 										
-								} else {
-									dfd.resolve( results );
-								}
+						} else {
+							dfd.resolve( results );
+						}
 								
-							}).promise;
+					}).promise;
 					
-					//return  new Deferred( target as Function ).resolve( args ).promise;
+				//return  new Deferred( target as Function ).resolve( args ).promise;
 					
 				case AsyncToken :
 					return  new Deferred( function( dfd ) {
-								var responder = new Responder( dfd.resolve, dfd.reject );
-								AsyncToken(target).addResponder( responder );
-							}).promise;
+							var responder = new Responder( dfd.resolve, dfd.reject );
+							AsyncToken(target).addResponder( responder );
+						}).promise;
 					
 				default        :
 					if ( target is IEventDispatcher )
@@ -355,8 +355,8 @@ package com.codecatalyst.promise
 			// Return empty, resolved promise
 			
 			return new Deferred( function(dfd:Deferred){ 
-						dfd.resolve( [target].concat(args) ); 
-					}).promise;
+					dfd.resolve( [target].concat(args) ); 
+				}).promise;
 		}		
 		
 		// ========================================
