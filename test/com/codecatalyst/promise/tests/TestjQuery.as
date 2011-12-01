@@ -391,8 +391,8 @@ package com.codecatalyst.promise.tests
 			var cache, i;
 			
 			for( i = 1 ; i < 4 ; i++ ) {
-				$.when( cache || $.Deferred( function() {
-					this.resolve( i );
+				$.when( cache || $.Deferred( function(dfd) {
+					dfd.resolve( i );
 				}) ).done(function( value ) {
 					strictEqual( value , 1 , "Function executed" + ( i > 1 ? " only once" : "" ) );
 					cache = value;

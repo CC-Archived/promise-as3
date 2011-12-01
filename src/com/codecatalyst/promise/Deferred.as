@@ -183,6 +183,9 @@ package com.codecatalyst.promise
 			
 			if ( callback != null ) 
 			{
+				// Only change handler/callback context if
+				// it expects an instance of Deferred
+				
 				callback.apply( this, callback.length ? [this] : [ ] );
 			}
 		}

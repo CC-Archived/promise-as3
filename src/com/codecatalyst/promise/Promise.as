@@ -155,96 +155,55 @@ package com.codecatalyst.promise
 		 */
 		public static function when( ...promises ):Promise
 		{
-			var deferred:Deferred = new Deferred();
+				// Insure we have an array of promises
+				promises = sanitize(promises);
 			
-			// In the scenario where instance.when() is called with NOTHING to watch
-			if (promises.length < 1)  {
-				deferred.resolve();
-			}
+			var numPending		:int      = promises.length,
+			    resolvedValues	:Array 	  = new Array( numPending ),
+				lastNotifyValue :Array 	  = new Array( numPending ),
+				deferred		:Deferred = new Deferred(function(dfd){
+												// If no promise, immediately resolve
+												return !promises.length && dfd.resolve();			
+											});
 
-
-			// Special handling for when an Array of Promises is specified instead of variable numbe of Promise arguments.
-			if ( ( promises.length == 1 ) && ( promises[ 0 ] is Array ) )
-				promises = promises[ 0 ];
-			
-			// Ensure the promises Array is populated with Promises.
-			var parameterCount:int = promises ? promises.length : 0;
-			for ( var parameterIndex:int = 0; parameterIndex <  parameterCount; parameterIndex++ )
-			{
-				var parameter:* = promises[ parameterIndex ];
-				
-				if (parameter == null) 
-				{
-					promises[ parameterIndex ] = new Deferred().resolve(null).promise;
-					
-				} else {
-					
-					switch ( parameter.constructor )
-					{
-						case Promise:
-							break;
-						
-						case Deferred:
-							// Replace the promises Array element with the associated Promise for the specified Deferred value.
-							promises[ parameterIndex ] = parameter.promise;
-							break;
-							
-						default:
-							// Create a new Deferred resolved with the specified parameter value, 
-							// and replace the promises Array element with the associated Promise.
-							
-							var func : Function = parameter as Function;
-							
-							promises[ parameterIndex ] = new Deferred( func ).resolve( func ? null : parameter).promise;
-							break;
-					}
-				}
-			}
-			
-			var pendingPromiseCount:int = promises.length;
-			
-			var progressValues:Array = new Array( pendingPromiseCount );
-			var resultValues:Array   = new Array( pendingPromiseCount );
-
-				/**
-				 * Use closure to manage promise reference in the then() handlers
-				 */
-				function _watchPromise(promise) : void {
-					promise.then(
-								// All promises must resolve() before the when() resolves
-						
-								function ( result:* ):void {
-									resultValues[ promises.indexOf( promise ) ] = result;
-									
-									pendingPromiseCount--;
-									if ( pendingPromiseCount == 0 )
-										deferred.resolve.apply(deferred, resultValues );
-								},
-								
-								// Any promise reject(), rejects the when()
-								
-								function ( error:* ):void {
-									deferred.reject( error );
-								},
-								
-								function ( promise:Promise, update:* ):void {
-									progressValues[ promises.indexOf( promise ) ] = update;
-									
-									deferred.notify.apply(deferred, progressValues );
-								},
-								
-								// Any promise cancel(), cancels the when()
-								
-								function ( reason:* ):void {
-									deferred.cancel( reason );
-								}
-							);
-				};
-				
-			
 			for each ( var promise:Promise in promises )
 			{
-				_watchPromise(promise);
+				/**
+				 * Use IIFE closure to manage promise reference in the then() handlers
+				 */
+				(function (promise:Promise) : void {
+					promise.then(
+						// All promises must resolve() before the when() resolves
+						
+						function ( result:* ):void {
+							resolvedValues[ promises.indexOf( promise ) ] = result;
+							
+							numPending--;
+							if ( numPending == 0 )
+								deferred.resolve.apply(deferred, resolvedValues );
+						},
+						
+						// Any promise reject(), rejects the when()
+						
+						function ( error:* ):void {
+							deferred.reject( error );
+						},
+						
+						// Only most recent notify value forwarded
+						
+						function ( promise:Promise, update:* ):void {
+							lastNotifyValue = update;
+							
+							deferred.notify.apply(deferred, [lastNotifyValue] );
+						},
+						
+						// Any promise cancel(), cancels the when()
+						
+						function ( reason:* ):void {
+							deferred.cancel( reason );
+						}
+					);
+				}(promise));
 			}
 			
 			return deferred.promise;
@@ -511,6 +470,56 @@ package com.codecatalyst.promise
 		protected function deferred_stateChangeHandler( event:Event ):void
 		{
 			dispatchEvent( event.clone() );
+		}
+		
+		/**
+		 * Convert all elements of `list` to promises.
+		 * Scalar values are converted to `resolved` promises
+		 */
+		protected static function sanitize( list:Array ) : Array 
+		{
+			// Special handling for when an Array of Promises is specified instead of variable numbe of Promise arguments.
+			if ( ( list.length == 1 ) && ( list[ 0 ] is Array ) )
+			{
+				list = list[ 0 ];
+			}
+			
+			// Ensure the promises Array is populated with Promises.
+			var count:int = list ? list.length : 0;
+			
+			for ( var j:int = 0; j <  count; j++ )
+			{
+				var parameter:* = list[ j ];
+				
+				if (parameter == null) 
+				{
+					list[ j ] = new Deferred().resolve(null).promise;
+					
+				} else {
+					
+					switch ( parameter.constructor )
+					{
+						case Promise:
+							break;
+						
+						case Deferred:
+							// Replace the promises Array element with the associated Promise for the specified Deferred value.
+							list[ j ] = parameter.promise;
+							break;
+						
+						default:
+							// Create a new Deferred resolved with the specified parameter value, 
+							// and replace the list Array element with the associated Promise.
+							
+							var func : Function = parameter as Function;
+							
+							list[ j ] = new Deferred( func ).resolve( func ? null : parameter).promise;
+							break;
+					}
+				}
+			}			
+		
+			return list;
 		}
 	}
 }

@@ -1,8 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testrun name="" >
 <testsuite  name="Default Test Suite" project="promise-as3">
+<testsuite name="com.codecatalyst.promise.tests:TestjQuery" type="testcaseclass">
+<testcase name="test_jQueryDeferred" classname="com.codecatalyst.promise.tests:TestjQuery"/>
+<testcase name="test_jQueryDeferred_chainability" classname="com.codecatalyst.promise.tests:TestjQuery"/>
+<testcase name="test_jQueryDeferred_filterWithResolve" classname="com.codecatalyst.promise.tests:TestjQuery"/>
+<testcase name="test_jQueryDeferred_filterWithReject" classname="com.codecatalyst.promise.tests:TestjQuery"/>
+<testcase name="test_jQueryDeferred_filterWithProgress" classname="com.codecatalyst.promise.tests:TestjQuery"/>
+<testcase name="test_jQueryDeferred_pipeWithDone" classname="com.codecatalyst.promise.tests:TestjQuery"/>
+<testcase name="test_jQueryDeferred_pipeWithFail" classname="com.codecatalyst.promise.tests:TestjQuery"/>
+<testcase name="test_jQueryDeferred_pipeWithProgress" classname="com.codecatalyst.promise.tests:TestjQuery"/>
+<testcase name="test_jQuery_when" classname="com.codecatalyst.promise.tests:TestjQuery"/>
+<testcase name="test_jQuery_whenJoined" classname="com.codecatalyst.promise.tests:TestjQuery"/>
+</testsuite>
+<testsuite name="com.codecatalyst.promise.tests:TestCallbacks" type="testcaseclass">
+<testcase name="test_jQueryCallbacks" classname="com.codecatalyst.promise.tests:TestCallbacks"/>
+</testsuite>
+<testsuite name="com.codecatalyst.promise.tests:TestPromise" type="testcaseclass">
+<testcase name="testConstruction" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testConstruction_parameterized" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testResolve" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testReject" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testUpdate_withResolve" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testUpdate_withCancel" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testUpdate_withReject" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testCancel" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testAlways_withCancel" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testAlways_withResolve" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testPipe_forTransform_withResolve" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testPipe_forTransform_withReject" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testPipe_forTransform_withUpdateAndResolve" classname="com.codecatalyst.promise.tests:TestPromise"/>
+<testcase name="testPipe_forTransform_withThenAndResolve" classname="com.codecatalyst.promise.tests:TestPromise"/>
+</testsuite>
 <testsuite name="com.codecatalyst.promise.tests:TestDeferred" type="testcaseclass">
+<testcase name="testConstruction" classname="com.codecatalyst.promise.tests:TestDeferred"/>
+<testcase name="testConstruction_parameterized" classname="com.codecatalyst.promise.tests:TestDeferred"/>
+<testcase name="testResolve" classname="com.codecatalyst.promise.tests:TestDeferred"/>
 <testcase name="testResolve_asynch" classname="com.codecatalyst.promise.tests:TestDeferred"/>
+<testcase name="testReject_withCallbacks" classname="com.codecatalyst.promise.tests:TestDeferred"/>
+<testcase name="testReject_beforeCallbacks" classname="com.codecatalyst.promise.tests:TestDeferred"/>
+<testcase name="testUpdate_withResolve" classname="com.codecatalyst.promise.tests:TestDeferred"/>
+<testcase name="testUpdate_withCancel" classname="com.codecatalyst.promise.tests:TestDeferred"/>
+<testcase name="testUpdate_withReject" classname="com.codecatalyst.promise.tests:TestDeferred"/>
 </testsuite>
 </testsuite>
 <portNumber value="8765" />
