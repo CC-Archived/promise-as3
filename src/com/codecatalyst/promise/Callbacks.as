@@ -174,7 +174,7 @@ package com.codecatalyst.promise
 					// firing was halted (stopOnFalse)
 					
 					firingStart = length;
-					fireCallbacks( memory[ 0 ], memory[ 1 ] );
+					fireCallbacks( memory[ 0 ], memory[ 1 ] as Array );
 				}
 			}
 			return this;

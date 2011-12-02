@@ -139,12 +139,12 @@ package com.codecatalyst.promise
 			{
 				if ( !progressEventProperty ) 
 				{
-					deferred.update( event );
+					deferred.notify( event );
 					
 				} else {
 					var value : * = event.hasOwnProperty(progressEventProperty) ? event[progressEventProperty] : null;
 					
-					deferred.update.apply(deferred, value ? [value] : null);
+					deferred.notify.apply(deferred, value ? [value] : null);
 				}
 			}
 			

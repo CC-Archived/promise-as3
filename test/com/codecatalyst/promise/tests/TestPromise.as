@@ -165,7 +165,7 @@ package com.codecatalyst.promise.tests
 			var promise = dfd.promise
 							 .then( onResultHandler, onErrorHandler, onProgressHandler, onCancelHandler );
 			
-				dfd.update( msg );
+				dfd.notify( msg );
 			
 			checkResults(promise, false, null, 0);
 			checkRejects(promise, false, null, 0);
@@ -826,14 +826,20 @@ package com.codecatalyst.promise.tests
 							}).promise,
 				
 				// Now create when() batch set...
+				// Promise2 will reject the entire when()
 				
 				batch    = Promise.when( promise1, promise2, promise3 )
-								  .then( onResultHandler, onErrorHandler);
+								  .then( onResultHandler, function (r1, r2, r3) {
+									  onErrorHandler(r2); } 
+								  );
 			
 			Async.delayCall(this, function(){
 				
 				checkResults(batch, false,  null,  		 1);
-				checkRejects(batch, true,  'rejected_2', 1);
+				
+				Assert.assertTrue("Rejected with an Array.", batch.error is Array );
+				Assert.assertTrue("Rejected with an Array(3)", batch.error.length == 3 );
+				Assert.assertTrue("Rejected `promise2` value", batch.error[1] == 'rejected_2' );
 				
 				checkUpdates(batch, false, null, 0);
 				checkCancels(batch, false, null, 0);
@@ -864,14 +870,20 @@ package com.codecatalyst.promise.tests
 				// Now create when() batch set...
 								   
 				batch    = Promise.when( promise1, promise2, promise3 )
-								  .then( onResultHandler, onErrorHandler, null, onCancelHandler );
+								  .then( onResultHandler, onErrorHandler, null, function( c1,c2,c3){
+									  onCancelHandler(c2);
+								  });
 
 			Async.delayCall(this, function(){
 				
 				checkResults(batch, false,  null,  		1);
 				checkRejects(batch, false, 	null, 		0);	// Cancelled first...	
 				checkUpdates(batch, false, 	null, 		0);
-				checkCancels(batch, true,  'cancel_2', 	1);
+				
+				Assert.assertTrue("Cancelled with an Array.", batch.reason is Array );
+				Assert.assertTrue("Cancelled with an Array(3)", batch.reason.length == 3 );
+				Assert.assertTrue("Cancelled `promise2` value", batch.reason[1] == 'cancel_2' );
+				
 			}, 60 );
 		}
 		
@@ -1032,7 +1044,7 @@ package com.codecatalyst.promise.tests
 				checkUpdates(promise, false, null, 0);
 				checkCancels(promise, false, null, 0);
 				
-			}, 25 );	
+			}, 45 );	
 		}	
 		
 		
@@ -1062,7 +1074,7 @@ package com.codecatalyst.promise.tests
 				checkUpdates(promise, true,  "timer", 3);
 				checkCancels(promise, false, null, 0);
 				
-			}, 60 );	
+			}, 90 );	
 		}
 		
 		// *****************************************************************************

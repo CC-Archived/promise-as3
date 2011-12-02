@@ -158,13 +158,17 @@ package com.codecatalyst.promise
 			// Insure we have an array of promises
 			promises = sanitize(promises);
 			
-			var numPending	    :int      = promises.length,
-				resolvedValues  :Array    = new Array( numPending ),
-				lastNotifyValue :Array    = new Array( numPending ),
-				deferred	    :Deferred = new Deferred( function(dfd:Deferred):* {
-												// If no promise, immediately resolve
-												return !promises.length && dfd.resolve();			
-											});
+			var size		:int      = promises.length,
+				
+				results  	:Array    = fill( new Array( size ) ),
+				errors		:Array    = fill( new Array( size ) ),
+				statuses    :Array    = fill( new Array( size ) ),
+				reasons    	:Array    = fill( new Array( size ) ),
+				
+				deferred	:Deferred = new Deferred( function(dfd:Deferred):* {
+											// If no promise, immediately resolve
+											return !promises.length && dfd.resolve();			
+										});
 			
 			for each ( var promise:Promise in promises )
 			{
@@ -176,31 +180,34 @@ package com.codecatalyst.promise
 						// All promises must resolve() before the when() resolves
 						
 						function ( result:* ):void {
-							resolvedValues[ promises.indexOf( promise ) ] = result;
+							results[ promises.indexOf( promise ) ] = result;
 							
-							numPending--;
-							if ( numPending == 0 )
-								deferred.resolve.apply(deferred, resolvedValues );
+							if ( --size == 0 )
+								deferred.resolve.apply(deferred, results );
 						},
 						
 						// Any promise reject(), rejects the when()
 						
 						function ( error:* ):void {
-							deferred.reject( error );
+							errors[ promises.indexOf( promise ) ] = error;
+							
+							deferred.reject.apply(deferred, errors);
 						},
 						
 						// Only most recent notify value forwarded
 						
-						function ( promise:Promise, update:* ):void {
-							lastNotifyValue = update;
+						function ( status:* ):void {
+							statuses[ promises.indexOf( promise ) ] = status;
 							
-							deferred.notify.apply(deferred, [lastNotifyValue] );
+							deferred.notify.apply(deferred, statuses );
 						},
 						
 						// Any promise cancel(), cancels the when()
 						
 						function ( reason:* ):void {
-							deferred.cancel( reason );
+							reasons[ promises.indexOf( promise ) ] = reason;
+							
+							deferred.cancel.apply(deferred, reasons );
 						}
 					);
 				}(promise));
@@ -520,6 +527,15 @@ package com.codecatalyst.promise
 					}
 				}
 			}			
+			
+			return list;
+		}
+	
+		protected static function fill( list:Array, val:*= undefined ):Array {
+			for ( var j:uint=0; j<list.length; j++ )
+			{
+				list[j] = val;	
+			}
 			
 			return list;
 		}

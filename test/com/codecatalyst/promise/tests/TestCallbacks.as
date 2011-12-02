@@ -49,13 +49,13 @@ package com.codecatalyst.promise.tests
 		[Before]
 		public function setUp():void
 		{
-			$ = jQuery();
+			jQuery = com.codecatalyst.promise.jQuery();
 		}
 		
 		[After]
 		public function tearDown():void
 		{
-			$ = null;
+			jQuery = null;
 		}
 		
 		// *****************************************************************************
@@ -69,7 +69,7 @@ package com.codecatalyst.promise.tests
 		//
 		// *****************************************************************************
 		
-		[Test(order=1, description="$.Callbacks")]
+		[Test(order=1, description="Port of jQuery QUnit tests: callbacks.js")]
 		public function test_jQueryCallbacks():void 
 		{
 			var output				:String;
@@ -107,12 +107,10 @@ package com.codecatalyst.promise.tests
 
 			
 
-			$.each( tests, function( flags, resultString ) {
+			jQuery.each( tests, function( flags, resultString ) {
 				
-				$.each( filters, function( filterLabel, filter ) {
+				jQuery.each( filters, function( filterLabel, filter ) {
 
-					initCounters();
-					
 						expect( 17 );
 						
 						var cblist,
@@ -120,7 +118,7 @@ package com.codecatalyst.promise.tests
 						
 						// Basic binding and firing
 						output = "X";
-						cblist = $.Callbacks( flags );
+						cblist = jQuery.Callbacks( flags );
 						cblist.add(function( str ) {
 							output += str;
 						});
@@ -137,7 +135,7 @@ package com.codecatalyst.promise.tests
 						
 						// Basic binding and firing (context, arguments)
 						output = "X";
-						cblist = $.Callbacks( flags );
+						cblist = jQuery.Callbacks( flags );
 						cblist.add(function() {
 							output += arguments.join( "" );
 						});
@@ -146,7 +144,7 @@ package com.codecatalyst.promise.tests
 						
 						// fireWith with no arguments
 						output = "";
-						cblist = $.Callbacks( flags );
+						cblist = jQuery.Callbacks( flags );
 						cblist.add(function() {
 							strictEqual( arguments.length, 0, "fireWith with no arguments (no arguments)" );
 						});
@@ -154,7 +152,7 @@ package com.codecatalyst.promise.tests
 						
 						// Basic binding, removing and firing
 						output = "X";
-						cblist = $.Callbacks( flags );
+						cblist = jQuery.Callbacks( flags );
 						cblist.add( outputA, outputB, outputC );
 						cblist.remove( outputB, outputC );
 						cblist.fire();
@@ -162,7 +160,7 @@ package com.codecatalyst.promise.tests
 						
 						// Empty
 						output = "X";
-						cblist = $.Callbacks( flags );
+						cblist = jQuery.Callbacks( flags );
 						cblist.add( outputA );
 						cblist.add( outputB );
 						cblist.add( outputC );
@@ -172,7 +170,7 @@ package com.codecatalyst.promise.tests
 						
 						// Locking
 						output = "X";
-						cblist = $.Callbacks( flags );
+						cblist = jQuery.Callbacks( flags );
 						cblist.add( function( str ) {
 							output += str;
 						});
@@ -188,7 +186,7 @@ package com.codecatalyst.promise.tests
 						
 						// Ordering
 						output = "X";
-						cblist = $.Callbacks( flags );
+						cblist = jQuery.Callbacks( flags );
 						cblist.add( function() {
 							cblist.add( outputC );
 							outputA();
@@ -210,7 +208,7 @@ package com.codecatalyst.promise.tests
 						
 						// Multiple fire
 						output = "X";
-						cblist = $.Callbacks( flags );
+						cblist = jQuery.Callbacks( flags );
 						cblist.add( function( str ) {
 							output += str;
 						} );
@@ -232,7 +230,7 @@ package com.codecatalyst.promise.tests
 						
 						// Return false
 						output = "X";
-						cblist = $.Callbacks( flags );
+						cblist = jQuery.Callbacks( flags );
 						cblist.add( outputA, function() { return false; }, outputB );
 						cblist.add( outputA );
 						cblist.fire();
@@ -251,17 +249,17 @@ package com.codecatalyst.promise.tests
 		}
 				
 	
+		// *****************************************************************************
+		// Simulation of QUnit methods
+		// *****************************************************************************
 		
-		// *****************************************************************************
-		// Protected Methods 
-		// - used to emulate functions in QUnit tests for jQuery Callbacks
-		// *****************************************************************************
 		protected function expect(val:uint):void {
 			expectedHits = val;
 		}
 		
 		protected function confirmExpected():void {
 			Assert.assertEquals("expected validations = "+ expectedHits, expectedHits, generatedHits );
+			generatedHits = 0;
 		}
 		
 		protected function ok(value:Boolean,message:String):void 	
@@ -280,6 +278,7 @@ package com.codecatalyst.promise.tests
 			generatedHits++; 
 			Assert.assertTrue(msg, matches);
 		}
+		
 		protected function strictEqual(state:*,value:*, message:String):void 	
 		{   
 			generatedHits++;
@@ -290,24 +289,21 @@ package com.codecatalyst.promise.tests
 			
 			Assert.assertStrictlyEquals( message, state, value); 	
 		}
+		
 		protected function notStrictEqual(state:*,value:*, message:String):void 	
 		{   
 			generatedHits++; 	
 			Assert.assertFalse(message,state === value); 	
 		}
 		
-		protected function initCounters():void {
-			generatedHits      = 0;
-		}
-		
 		// *****************************************************************************
 		// Private Properties 
 		// *****************************************************************************
 		
-		private var $					:Object;
+		private var jQuery		  :Object;
 		
-		private var generatedHits      :int;
-		private var expectedHits      :uint;
+		private var generatedHits :int;
+		private var expectedHits  :uint;
 		
 		
 	}

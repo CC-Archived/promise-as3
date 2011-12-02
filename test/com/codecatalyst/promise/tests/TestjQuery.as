@@ -33,6 +33,12 @@ package com.codecatalyst.promise.tests
    *   5) test( "jQuery.Deferred.pipe - context") 	disabled 
    *   6) test("jQuery.when - joined") 				disabled
    * 
+   * The primary, essential difference between the AS3 and Javascript implementation is
+   * the `this` context in the Deferred/Promise handlers.
+   * 
+   * 		In AS3, the `this` context does NOT refer to the Deferred/Promise instance. Rather the
+   * 		`this` scope references the context where the function was defined!
+   * 
    */
   public class TestjQuery
   {   
@@ -51,7 +57,11 @@ package com.codecatalyst.promise.tests
     public function setUp():void
     {
       jQuery = com.codecatalyst.promise.jQuery();
-      initCounters();
+	  
+	  (function initCounters():void {
+		  alwaysHitCount      = 0;
+		  alwaysReponse       = null;
+	  }());
     }
     
     [After]
@@ -67,10 +77,10 @@ package com.codecatalyst.promise.tests
     //
     // *****************************************************************************
     
-    [Test(order=1, description="$ QUnit: deferred.js")]
+    [Test(order=1, description="Port of jQuery QUnit tests: deferred.js")]
     public function test_jQueryDeferred():void 
     {
-		
+
 		test("jQuery.Deferred", function() {
 			
 			expect( 22 );
@@ -332,31 +342,33 @@ package com.codecatalyst.promise.tests
 		});
 		
 		/*
+		* Currently not supported in ActionScript3 implementation
+		*
 		test( "jQuery.Deferred.pipe - context", function() {
-			
-			expect(4);
-			
-			var context = {};
-			
-			jQuery.Deferred().resolveWith( context, [ 2 ] ).pipe(function( value ) {
-				return value * 3;
-			}).done(function( value ) {
-				strictEqual( dfd, context, "custom context correctly propagated" );
-				strictEqual( value, 6, "proper value received" );
-			});
-			
-			var defer = jQuery.Deferred(),
-			piped = defer.pipe(function( value ) {
-				return value * 3;
-			});
-			
-			defer.resolve( 2 );
-			
-			piped.done(function( value ) {
-				strictEqual( defer.promise, piped, "default context gets updated to latest defer in the chain" );
-				strictEqual( value, 6, "proper value received" );
-			});
-			
+		
+		expect(4);
+		
+		var context = {};
+		
+		jQuery.Deferred().resolveWith( context, [ 2 ] ).pipe(function( value ) {
+		return value * 3;
+		}).done(function( value ) {
+		strictEqual( dfd, context, "custom context correctly propagated" );
+		strictEqual( value, 6, "proper value received" );
+		});
+		
+		var defer = jQuery.Deferred(),
+		piped = defer.pipe(function( value ) {
+		return value * 3;
+		});
+		
+		defer.resolve( 2 );
+		
+		piped.done(function( value ) {
+		strictEqual( defer.promise, piped, "default context gets updated to latest defer in the chain" );
+		strictEqual( value, 6, "proper value received" );
+		});
+		
 		});
 		*/
 		
@@ -402,7 +414,9 @@ package com.codecatalyst.promise.tests
 			
 		});
 		
-		/*
+		/*		
+		 *
+		 *
 		test("jQuery.when - joined", function() {
 			
 			expect(53);
@@ -432,12 +446,12 @@ package com.codecatalyst.promise.tests
 			
 			jQuery.each( deferreds, function( id1, defer1 ) {
 				jQuery.each( deferreds, function( id2, defer2 ) {
-					var shouldResolve = willSucceed[ id1 ] && willSucceed[ id2 ],
-					shouldError = willError[ id1 ] || willError[ id2 ],
-					shouldNotify = willNotify[ id1 ] || willNotify[ id2 ],
-					expected = shouldResolve ? [ 1, 1 ] : [ 0, undefined ],
-					expectedNotify = shouldNotify && [ willNotify[ id1 ], willNotify[ id2 ] ],
-					code = id1 + "/" + id2;
+					var shouldResolve  = willSucceed[ id1 ] && willSucceed[ id2 ],
+						shouldError    = willError[ id1 ] || willError[ id2 ],
+						shouldNotify   = willNotify[ id1 ] || willNotify[ id2 ],
+						expected       = shouldResolve ? [ 1, 1 ] : [ 0, undefined ],
+						expectedNotify = shouldNotify && [ willNotify[ id1 ], willNotify[ id2 ] ],
+						code           = id1 + "/" + id2;
 					
 					var promise = jQuery.when( defer1, defer2 ).done(function( a, b ) {
 						if ( shouldResolve ) {
@@ -447,7 +461,7 @@ package com.codecatalyst.promise.tests
 						}
 					}).fail(function( a, b ) {
 						if ( shouldError ) {
-							deepEqual( [ a, b ], expected, code + " => reject" );
+							deepEqual( [ b, a ], expected, code + " => reject" );
 						} else {
 							ok( false ,  code + " => reject" );
 						}
@@ -459,48 +473,32 @@ package com.codecatalyst.promise.tests
 			deferreds.futureSuccess.resolve( 1 );
 			deferreds.futureError.reject( 0 );
 		});
-		*/
+	   */		
 		
 		confirmExpected();
     }
      
     
     // *****************************************************************************
-    // Protected Methods
+    // Simulation of QUnit methods
     // *****************************************************************************
     
-    protected function test(title,testFunc) {
-      trace("test( " + title + " )");
-      testFunc();
-    }
-    
-    protected function createDeferred(...args):Deferred {
-      return this.dfd = jQuery.Deferred.apply(null,args);
-    }
-    protected function expect(val:uint):void {
+	protected function test(title,testFunc) {
+		trace("test( " + title + " )");
+		testFunc();
+	}
+
+	protected function expect(val:uint):void {
       expectedChecks += val;
     }
-    
-    protected function confirmExpected():void {
-      Assert.assertEquals("expected validations = "+ expectedChecks, expectedChecks, alwaysHitCount );
-    }
-    
+	
+	
     protected function ok(value:Boolean,message:String):void  
     {   
       alwaysHitCount++;   
       Assert.assertTrue(message,value);   
     }
     
-    protected function deepEqual(actual, expected, msg):void {
-      var matches : Boolean = true;
-      
-      for (var key in actual) {
-        matches &&= (expected.hasOwnProperty(key) && actual[key] == expected[key]); 
-      }
-      
-      alwaysHitCount++; 
-      Assert.assertTrue(msg, matches);
-    }
     protected function strictEqual(state:*,value:*, message:String):void  
     {   
       alwaysHitCount++;
@@ -517,14 +515,17 @@ package com.codecatalyst.promise.tests
       Assert.assertFalse(message,state === value);  
     }
     
-    protected function initCounters():void {
-      alwaysHitCount      = 0;
-      alwaysReponse       = null;
-    }
-    
+	protected function confirmExpected():void {
+		Assert.assertEquals("expected validations = "+ expectedChecks, expectedChecks, alwaysHitCount );
+	}
+	
     // *****************************************************************************
     // Private Properties 
     // *****************************************************************************
+
+	private function createDeferred(...args):Deferred {
+		return this.dfd = jQuery.Deferred.apply(null,args);
+	}
     
 	private var dfd      		:Deferred;
     private var jQuery      	:Object;

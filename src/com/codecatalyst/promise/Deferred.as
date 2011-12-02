@@ -259,7 +259,7 @@ package com.codecatalyst.promise
 			var origin : Deferred = this;	
 			
 			// Return wrapper Deferred that will be triggered when `origin` responds 
-			// via origin.resolve(), origin.reject(), origin.update(), or origin.cancel()
+			// via origin.resolve(), origin.reject(), origin.notify(), or origin.cancel()
 			
 			return new Deferred( function( dfd:Deferred ):void {
 				
@@ -290,7 +290,7 @@ package com.codecatalyst.promise
 								if ( promise ) {
 									// This code supports pipe(<doneFunc>) rejecting with a Promise
 									
-									promise.then(dfd.resolve, dfd.reject, dfd.update, dfd.cancel );
+									promise.then(dfd.resolve, dfd.reject, dfd.notify, dfd.cancel );
 									
 								} else {
 									// Call the resolveWith(), rejectWith(), etc functions
@@ -381,18 +381,7 @@ package com.codecatalyst.promise
 		}
 		
 		/**
-		 * Update this Deferred and notifyCallbacks relevant callbacks.
-		 */
-		public function update(...args):Deferred
-		{
-			notifyDispatcher.fire.apply(null, args);
-			return this;
-		}
-		
-		/**
-		 *  Same as update(); but alias is useful to match Javascript API
-		 *
-		 *  @see ::update()
+		 *  Update this Deferred and notifyCallbacks relevant callbacks.
 		 */ 
 		public function notify(...args):Deferred
 		{

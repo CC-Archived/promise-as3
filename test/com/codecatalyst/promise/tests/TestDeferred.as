@@ -192,7 +192,7 @@ package com.codecatalyst.promise.tests
 				
 				Assert.assertFalse( "Deferred 'pending' === false",  dfd.pending );
 			
-			dfd.update( "Update after rejection" );
+			dfd.notify( "Update after rejection" );
 			
 				
 				checkResults(dfd, false, null, 0);
@@ -256,7 +256,7 @@ package com.codecatalyst.promise.tests
 					Assert.assertTrue( "Deferred 'pending' === true",  dfd.pending );
 			})
 			.then( onResultHandler, onErrorHandler, onProgressHandler, onCancelHandler )
-			.update( msg );
+			.notify( msg );
 			
 				checkResults(dfd, false, null, 0);
 				checkRejects(dfd, false, null, 0)
@@ -268,7 +268,7 @@ package com.codecatalyst.promise.tests
 			// Now attempt to update while still pending
 
 			msg = "Update #2";
-			dfd.update( msg );
+			dfd.notify( msg );
 			
 				checkResults(dfd, false, null, 0);
 				checkRejects(dfd, false, null, 0)
@@ -281,7 +281,7 @@ package com.codecatalyst.promise.tests
 				
 			msg = "Update #3";
 			dfd.resolve( "Locked" )
-			   .update( msg );
+			   .notify( msg );
 				
 				checkResults(dfd, true, "Locked", 1);
 				checkRejects(dfd, false, null, 0)
@@ -307,7 +307,7 @@ package com.codecatalyst.promise.tests
 						Assert.assertFalse( "Deferred 'pending' === false",  dfd.pending );
 					})	
 					.then( onResultHandler, onErrorHandler, onProgressHandler, onCancelHandler )
-					.update( msg );
+					.notify( msg );
 			
 			checkResults(dfd, false, null, 0)
 			checkRejects(dfd, false, null, 0);
@@ -334,7 +334,7 @@ package com.codecatalyst.promise.tests
 						Assert.assertFalse( "Deferred 'pending' === false",  dfd.pending );
 					})	
 					.then( onResultHandler, onErrorHandler, onProgressHandler, onCancelHandler )
-					.update( msg );
+					.notify( msg );
 			
 			checkResults(dfd, false, null, 0)
 			checkRejects(dfd, true, "Rejected", 1);
@@ -384,7 +384,7 @@ package com.codecatalyst.promise.tests
 				
 				Assert.assertFalse( "Deferred 'pending' === false",  dfd.pending );
 			
-			dfd.update( "Update after cancel" );
+			dfd.notify( "Update after cancel" );
 				
 				checkResults(dfd, false, null, 0);
 				checkRejects(dfd, false, null, 0);
@@ -471,7 +471,7 @@ package com.codecatalyst.promise.tests
 				
 				Assert.assertFalse( "Deferred 'pending' === false",  dfd.pending );
 				
-			dfd.update("nothing should happen");
+			dfd.notify("nothing should happen");
 			
 				checkResults(dfd, false, null, 0);
 				checkRejects(dfd, false, null, 0);
@@ -531,8 +531,8 @@ package com.codecatalyst.promise.tests
 					})
 					.then( onResultHandler, onErrorHandler, null, onCancelHandler)
 					.always( onAlwaysHandler )
-					.update( "update 1" )
-					.update( "update 2" )
+					.notify( "update 1" )
+					.notify( "update 2" )
 					.cancel(msg);
 			
 			checkResults(dfd, false,  null, 		0);
@@ -561,8 +561,8 @@ package com.codecatalyst.promise.tests
 					})
 					.then( onResultHandler, onErrorHandler, onProgressHandler)
 					.always( onAlwaysHandler )
-					.update( msg )
-					.update( msg )
+					.notify( msg )
+					.notify( msg )
 					.resolve(msg);
 			
 			checkResults(dfd, true,  msg, 1);
@@ -583,8 +583,8 @@ package com.codecatalyst.promise.tests
 					})
 					.then( onResultHandler, onErrorHandler, null, onCancelHandler)
 					.always( onAlwaysHandler )
-					.update( "update 1" )
-					.update( "update 2" )
+					.notify( "update 1" )
+					.notify( "update 2" )
 					.cancel(msg);
 			
 			checkResults(dfd, false,  null, 		0);
