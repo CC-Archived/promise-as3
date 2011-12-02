@@ -9,53 +9,12 @@
 				layout="absolute">
 	<fx:Script>
 		<![CDATA[
-			import com.codecatalyst.promise.tests.TestDeferred;
-			import com.codecatalyst.promise.tests.TestjQuery;
-			import com.codecatalyst.promise.tests.TestCallbacks;
-			import com.codecatalyst.promise.tests.TestPromise;
-			import org.flexunit.runner.Request;
+			import com.codecatalyst.promise.PromiseSuite;
 			
 			public function currentRunTestSuite():Array
 			{
 				var testsToRun:Array = new Array();
-				
-				testsToRun.push(Request.methods(com.codecatalyst.promise.tests.TestPromise,["testConstruction",
-					"testConstruction_parameterized",
-					"testResolve",
-					"testReject",
-					"testUpdate_withResolve",
-					"testUpdate_withCancel",
-					"testUpdate_withReject",
-					"testCancel",
-					"testAlways_withCancel",
-					"testAlways_withResolve",
-					"testPipe_forTransform_withResolve",
-					"testPipe_forTransform_withReject",
-					"testPipe_forTransform_withUpdateAndResolve",
-					"testPipe_forTransform_withThenAndResolve"]));
-				
-				testsToRun.push(Request.methods(com.codecatalyst.promise.tests.TestCallbacks,["test_jQueryCallbacks"]));
-				
-				testsToRun.push(Request.methods(com.codecatalyst.promise.tests.TestjQuery,["test_jQueryDeferred",
-					"test_jQueryDeferred_chainability",
-					"test_jQueryDeferred_filterWithResolve",
-					"test_jQueryDeferred_filterWithReject",
-					"test_jQueryDeferred_filterWithProgress",
-					"test_jQueryDeferred_pipeWithDone",
-					"test_jQueryDeferred_pipeWithFail",
-					"test_jQueryDeferred_pipeWithProgress",
-					"test_jQuery_when",
-					"test_jQuery_whenJoined"]));
-				
-				testsToRun.push(Request.methods(com.codecatalyst.promise.tests.TestDeferred,["testConstruction",
-					"testConstruction_parameterized",
-					"testResolve",
-					"testResolve_asynch",
-					"testReject_withCallbacks",
-					"testReject_beforeCallbacks",
-					"testUpdate_withResolve",
-					"testUpdate_withCancel",
-					"testUpdate_withReject"]));
+				testsToRun.push(com.codecatalyst.promise.PromiseSuite);
 				return testsToRun;
 			}
 			

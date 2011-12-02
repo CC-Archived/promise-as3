@@ -53,7 +53,7 @@ package com.codecatalyst.promise
 		 */
 		public function get fired() : Boolean  	 {	return !!memory;	}		
 		
-
+		
 		public function get stopped() : Boolean  
 		{ 
 			return memory === true; 
@@ -74,8 +74,8 @@ package com.codecatalyst.promise
 		public function get lastMemory():* {
 			var last : Array = 	memory as Array;
 			
-				// NOTE: last[0] == context
-			    //       last[1] == args
+			// NOTE: last[0] == context
+			//       last[1] == args
 			
 			return last ? last[1] : null;
 		}
@@ -98,10 +98,10 @@ package com.codecatalyst.promise
 		/**
 		 * Control if a given callback is in the list
 		 */
-		public function has( fn ):Boolean {
+		public function has( fn:Function ):Boolean {
 			if ( list ) {
-				var i = 0,
-					length = list.length;
+				var i:uint      = 0,
+					length:uint = list.length;
 				
 				for ( ; i < length; i++ ) 
 				{
@@ -157,7 +157,7 @@ package com.codecatalyst.promise
 		 */
 		public function add(...args):Callbacks {
 			if ( list ) {
-				var length = list.length;
+				var length:uint = list.length;
 				
 				addCallbacks( args );
 				
@@ -186,12 +186,12 @@ package com.codecatalyst.promise
 		public function remove(...args):Callbacks {
 			if ( list ) 
 			{
-				var argLength = args.length,
-					argIndex  = 0;
+				var argLength:uint = args.length,
+					argIndex:uint  = 0;
 				
 				for ( ; argIndex < argLength ; argIndex++ ) 
 				{
-					for ( var i = 0; i < list.length; i++ ) 
+					for ( var i:uint = 0; i < list.length; i++ ) 
 					{
 						if ( args[ argIndex ] === list[ i ] ) 
 						{
@@ -224,7 +224,7 @@ package com.codecatalyst.promise
 		/**
 		 * Call all callbacks with the given context and arguments
 		 */
-		public function fireWith( context, args ):Callbacks {
+		public function fireWith( context:Object, args:Array ):Callbacks {
 			if ( !locked ) 
 			{
 				if ( firing ) 
@@ -258,7 +258,7 @@ package com.codecatalyst.promise
 		/**
 		 * Add one or several callbacks to the list 
 		 */
-		protected function addCallbacks( args ):void {
+		protected function addCallbacks( args:Array ):void {
 			
 			for ( var i:uint = 0, length:uint = args.length; i < length; i++ ) 
 			{
@@ -278,7 +278,7 @@ package com.codecatalyst.promise
 			}
 		}
 		
-		protected function fireCallbacks( context, args ):void {
+		protected function fireCallbacks( context:Object, args:Array ):void {
 			args         = args || [];
 			memory       = !flags.memory || [ context, args ];
 			firing       = true;
@@ -300,8 +300,10 @@ package com.codecatalyst.promise
 							break;
 						}
 					}
-				} catch( e:Error )  { 
-					trace(e.message); 
+				} catch( e:Error )  {
+					// Catch only to log...
+					trace(e.message);
+					throw( e );
 				}
 			}
 			
@@ -328,11 +330,11 @@ package com.codecatalyst.promise
 						list = [];
 					}
 				}
-			
+				
 				dispatchEvent( new Event( STATE_CHANGED ) );
 			}
 		}
-
+		
 		// ****************************************************************************
 		// Private Attribtues
 		// ****************************************************************************
@@ -357,22 +359,22 @@ package com.codecatalyst.promise
 		 * Flag to know if list is currently firing
 		 */
 		private var firing : Boolean = false;
-
+		
 		/**
 		 * First callback to fire (used internally by add and fireWith)
 		 */
 		private var firingStart : *;
-
+		
 		/**
 		 * End of the loop when firing
 		 */
 		private var firingLength : uint;
-
+		
 		/**
 		 * Index of currently firing callback (modified by remove if needed)
 		 */
 		private var firingIndex : uint;
-
+		
 		/**
 		 * A list of space-separated flags that will change how
 		 * the callback list behaves
@@ -399,7 +401,7 @@ package com.codecatalyst.promise
 			}
 			return results;
 		}
-
+		
 		/**
 		 * Global lookup between string and object flag options
 		 * @private 

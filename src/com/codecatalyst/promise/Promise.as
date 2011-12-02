@@ -30,7 +30,7 @@ package com.codecatalyst.promise
 	
 	import mx.rpc.AsyncToken;
 	import mx.rpc.Responder;
-
+	
 	/**
 	 * Promise.
 	 * 
@@ -155,17 +155,17 @@ package com.codecatalyst.promise
 		 */
 		public static function when( ...promises ):Promise
 		{
-				// Insure we have an array of promises
-				promises = sanitize(promises);
+			// Insure we have an array of promises
+			promises = sanitize(promises);
 			
 			var numPending	    :int      = promises.length,
-			    resolvedValues  :Array    = new Array( numPending ),
-			    lastNotifyValue :Array    = new Array( numPending ),
-			    deferred	    :Deferred = new Deferred(function(dfd){
-								    // If no promise, immediately resolve
-								    return !promises.length && dfd.resolve();			
-							    });
-
+				resolvedValues  :Array    = new Array( numPending ),
+				lastNotifyValue :Array    = new Array( numPending ),
+				deferred	    :Deferred = new Deferred( function(dfd:Deferred):* {
+												// If no promise, immediately resolve
+												return !promises.length && dfd.resolve();			
+											});
+			
 			for each ( var promise:Promise in promises )
 			{
 				/**
@@ -232,32 +232,32 @@ package com.codecatalyst.promise
 		 */
 		public static function wait ( delay:uint=30, ...args ) : Promise {
 			
-				/**
-				 * If the first variable param is a Function reference, then auto-call
-				 * that function with/without any subsequent optional params 
-				 */
-				function doInlineCallback():* {
-					var func 	: Function = args.length ? args[0] as Function : null,
-						result  : * 	   = null;
+			/**
+			 * If the first variable param is a Function reference, then auto-call
+			 * that function with/without any subsequent optional params 
+			 */
+			function doInlineCallback():* {
+				var func 	: Function = args.length ? args[0] as Function : null,
+					result  : * 	   = null;
+				
+				if (func != null) {
+					// 1) Remove function element,
+					// 2) Call function, save response, and
+					// 3) Clear arguments
 					
-					if (func != null) {
-						// 1) Remove function element,
-						// 2) Call function, save response, and
-						// 3) Clear arguments
-						
-						args.shift();
-						
-						result = func.apply(null, args);
-						args   = [ ];
-					}
+					args.shift();
 					
-					return result;
+					result = func.apply(null, args);
+					args   = [ ];
 				}
 				
+				return result;
+			}
+			
 			return new Deferred( function(dfd:Deferred) : void {
 				var timer:uint = setTimeout( function():void{
 					clearInterval(timer);
-
+					
 					// Call the specified function (if any)
 					
 					var response : * = doInlineCallback();
@@ -319,31 +319,31 @@ package com.codecatalyst.promise
 					return Promise.when( target );
 					
 				case Function   :
-					return new Deferred( function(dfd) {
-						var results = Function(target).apply(null,args);
-								
+					return new Deferred( function(dfd:Deferred):void {
+						var results:* = Function(target).apply(null,args);
+						
 						// Could be a Promise-generator or a `normal` function
-								
+						
 						if (results is Promise) 
 						{
 							Promise(results)
-								.pipe( function(value) { 
-									return dfd.resolve(value); 
-								});
-										
+							.pipe( function(value:*):* { 
+								return dfd.resolve(value); 
+							});
+							
 						} else {
 							dfd.resolve( results );
 						}
-								
+						
 					}).promise;
 					
-				//return  new Deferred( target as Function ).resolve( args ).promise;
+					//return  new Deferred( target as Function ).resolve( args ).promise;
 					
 				case AsyncToken :
-					return  new Deferred( function( dfd ) {
-							var responder = new Responder( dfd.resolve, dfd.reject );
-							AsyncToken(target).addResponder( responder );
-						}).promise;
+					return  new Deferred( function( dfd:Deferred ):void {
+						var responder : Responder = new Responder( dfd.resolve, dfd.reject );
+						AsyncToken(target).addResponder( responder );
+					}).promise;
 					
 				default        :
 					if ( target is IEventDispatcher )
@@ -354,9 +354,9 @@ package com.codecatalyst.promise
 			
 			// Return empty, resolved promise
 			
-			return new Deferred( function(dfd:Deferred){ 
-					dfd.resolve( [target].concat(args) ); 
-				}).promise;
+			return new Deferred( function(dfd:Deferred):void{ 
+				dfd.resolve( [target].concat(args) ); 
+			}).promise;
 		}		
 		
 		// ========================================
@@ -389,7 +389,7 @@ package com.codecatalyst.promise
 		{
 			return deferred.then( resultCallback ).promise;
 		}
-
+		
 		/**
 		 * Alias to Deferred.fail(); match jQuery API
 		 * 
@@ -399,7 +399,7 @@ package com.codecatalyst.promise
 		{
 			return deferred.fail( resultCallback ).promise;
 		}
-
+		
 		/**
 		 * Registers a callback to be called when this Promise is updated.
 		 */
@@ -513,12 +513,14 @@ package com.codecatalyst.promise
 							
 							var func : Function = parameter as Function;
 							
-							list[ j ] = new Deferred( func ).resolve( func ? null : parameter).promise;
+							// NOTE: check if this works when the func() returns a Promise instance?
+							
+							list[ j ] = new Deferred( func ).resolve( (func != null) ? null : parameter).promise;
 							break;
 					}
 				}
 			}			
-		
+			
 			return list;
 		}
 	}

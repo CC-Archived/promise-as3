@@ -261,8 +261,9 @@ package com.codecatalyst.promise
 			
 			// Parse configuration for the listen() method by merging
 			// default options with any overrides.
+			var results : Object = defaults;
 			
-			var results = _merge( defaults, _at(0) as String 	? { types:{ result   : _at(0)         }}  : _at(0) as Object );
+				results = _merge( results, _at(0) as String 	? { types:{ result   : _at(0)         }}  : _at(0) as Object );
 				results = _merge( results,  _at(1) as String 	? { types:{ faults   : [_at(1)]       }}  : 
 											_at(1) as Array 	? { types:{ faults   : _at(1)    	  }}  : _at(1) as Object );
 				results = _merge( results,  _at(2) as String	? { types:{ progress : { type:_at(2) }}}  : _at(2) as Object ); 

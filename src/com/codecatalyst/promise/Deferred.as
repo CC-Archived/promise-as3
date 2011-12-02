@@ -288,6 +288,7 @@ package com.codecatalyst.promise
 														(val is Promise)  ? Promise(val)			: null;
 								
 								if ( promise ) {
+									// This code supports pipe(<doneFunc>) rejecting with a Promise
 									
 									promise.then(dfd.resolve, dfd.reject, dfd.update, dfd.cancel );
 									
@@ -412,26 +413,26 @@ package com.codecatalyst.promise
 		// Special methods used by the pipe() feature
 		// ***************************************************************
 		
-		public function resolveWith(context:Object,args:Array):Deferred 
+		internal function resolveWith(context:Object,args:Array):Deferred 
 		{
 			resolveDispatcher.fireWith(context,args);
 			return this;
 		}
 		
-		public function rejectWith(context:Object,args:Array):Deferred 
+		internal  function rejectWith(context:Object,args:Array):Deferred 
 		{
 			rejectDispatcher.fireWith(context,args);
 			return this;
 		}
 		
-		public function notifyWith(context:Object,args:Array):Deferred 
+		internal  function notifyWith(context:Object,args:Array):Deferred 
 		{
 			notifyDispatcher.fireWith(context,args);
 			return this;
 		}
 			
 			
-		public function cancelWith(context:Object,args:Array):Deferred 
+		internal  function cancelWith(context:Object,args:Array):Deferred 
 		{
 			cancelDispatcher.fireWith(context,args);
 			return this;
