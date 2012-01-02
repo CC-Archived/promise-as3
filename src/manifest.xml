@@ -4,6 +4,5 @@
 	<component id="Deferred" 	class="com.codecatalyst.promise.Deferred" />
 	<component id="Promise" 	class="com.codecatalyst.promise.Promise" />
 	<component id="Callbacks" 	class="com.codecatalyst.promise.Callbacks" />
-	<component id="jQuery" 		class="com.codecatalyst.promise.jQuery" />
 	
 </componentPackage>

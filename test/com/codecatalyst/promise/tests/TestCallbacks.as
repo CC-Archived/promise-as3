@@ -9,7 +9,7 @@
 package com.codecatalyst.promise.tests
 {
 	import com.codecatalyst.promise.Promise;
-	import com.codecatalyst.promise.jQuery;
+	import com.codecatalyst.promise.util.jQuery;
 	
 	import flexunit.framework.TestCase;
 	
@@ -49,7 +49,7 @@ package com.codecatalyst.promise.tests
 		[Before]
 		public function setUp():void
 		{
-			jQuery = com.codecatalyst.promise.jQuery();
+			jQuery = com.codecatalyst.promise.util.jQuery();
 		}
 		
 		[After]

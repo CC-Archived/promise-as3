@@ -10,7 +10,7 @@ package com.codecatalyst.promise.tests
 {
   import com.codecatalyst.promise.Deferred;
   import com.codecatalyst.promise.Promise;
-  import com.codecatalyst.promise.jQuery;
+  import com.codecatalyst.promise.util.jQuery;
   
   import org.flexunit.Assert;
 
@@ -56,7 +56,7 @@ package com.codecatalyst.promise.tests
     [Before]
     public function setUp():void
     {
-      jQuery = com.codecatalyst.promise.jQuery();
+      jQuery = com.codecatalyst.promise.util.jQuery();
 	  
 	  (function initCounters():void {
 		  alwaysHitCount      = 0;

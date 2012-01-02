@@ -1,4 +1,4 @@
-package com.codecatalyst.promise
+package com.codecatalyst.promise.util
 {
 	import flash.events.IEventDispatcher;
 	import flash.utils.clearInterval;
@@ -6,6 +6,9 @@ package com.codecatalyst.promise
 	
 	import mx.rpc.AsyncToken;
 	import mx.rpc.Responder;
+	import com.codecatalyst.promise.Callbacks;
+	import com.codecatalyst.promise.Deferred;
+	import com.codecatalyst.promise.Promise;
 	
 	/**
 	 * jQuery-like wrapper to Deferreds and Promises. Function used to create alias object with power 

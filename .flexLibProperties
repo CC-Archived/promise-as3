@@ -5,7 +5,7 @@
     <classEntry path="com.codecatalyst.promise.Deferred"/>
     <classEntry path="com.codecatalyst.promise.Promise"/>
     <classEntry path="com.codecatalyst.promise.PromiseUtil"/>
-    <classEntry path="com.codecatalyst.promise.jQuery"/>
+    <classEntry path="com.codecatalyst.promise.util.jQuery"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests>

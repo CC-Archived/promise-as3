@@ -33,7 +33,7 @@
     	
 		<compc 
 			output="${OUTPUT_DIR}/${project.name.versioned}.swc" 
-			include-classes="com.codecatalyst.promise.Callbacks com.codecatalyst.promise.Deferred com.codecatalyst.promise.Promise com.codecatalyst.promise.PromiseUtil com.codecatalyst.promise.jQuery"
+			include-classes="com.codecatalyst.promise.Callbacks com.codecatalyst.promise.Deferred com.codecatalyst.promise.Promise com.codecatalyst.promise.PromiseUtil"
 			compiler.as3="true" incremental="false" maxmemory="512m" 
 			compiler.show-deprecation-warnings="false" show-binding-warnings="false" warnings="false"
 			actionscript-file-encoding="UTF-8" optimize="true" debug="false"
