@@ -273,3 +273,4 @@ An [build.xml](https://github.com/CodeCatalyst/promise-as3/blob/develop/build.xm
 * [From callbacks... to $.Deferred... to $.Callbacks](http://demo.creative-area.net/jqcon2011-boston/#1)
 * [Using Promises to bind Button clicks](http://jsfiddle.net/ThomasBurleson/RTLr6/)
 * [Demystifying jQuery 1.7′s $.Callbacks](http://addyosmani.com/blog/jquery-1-7s-callbacks-feature-demystified/)
+* [when.js](https://github.com/briancavalier/when.js) - standalone, Promise/A implementation.

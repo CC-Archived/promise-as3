@@ -531,7 +531,11 @@ package com.codecatalyst.promise
 			return list;
 		}
 	
-		protected static function fill( list:Array, val:*= undefined ):Array {
+		/**
+		 * Initialize all elements of an array with specified value.
+		 */
+		protected static function fill( list:Array, val:*= undefined ):Array 
+		{
 			for ( var j:uint=0; j<list.length; j++ )
 			{
 				list[j] = val;	
