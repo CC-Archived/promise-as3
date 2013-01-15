@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<componentPackage>
+
+	<component id="Deferred" 	class="com.codecatalyst.promise.Deferred" />
+	<component id="Promise" 	class="com.codecatalyst.promise.Promise" />
+	
+</componentPackage>

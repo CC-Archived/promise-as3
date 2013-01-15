@@ -1,83 +1,92 @@
-# Promises for Actionscript 3
+<img src="https://raw.github.com/CodeCatalyst/promise-as3/master/promise-as3-logo.png" width="580" height="115">
 
-## <span style="color:#AA0000">Attention Developers</span>
+## About
 
-All work is currently in the [develop branch](https://github.com/CodeCatalyst/promise-as3/tree/develop) <br/>
-A detailed README is also availble in the develop branch.
+promise-as3 is an ActionScript 3.0 implementation of the [Promises/A+ Specification](https://github.com/promises-aplus/promises-spec).  Its implementation is derived from the [promise.coffee](https://github.com/CodeCatalyst/promise.coffee) object oriented [CoffeeScript](http://coffeescript.org/) reference implementation.
 
+It is fully asynchronous, ensuring that the `onFulfilled` and `onRejected` callbacks are not executed in the same turn of the event loop as the call to `then()` with which they were registered.
 
-## Introduction
+It supports foreign promises returned by callbacks as long as they support the standard Promise `then()` method signature.
 
+## API
 
-The repository provides a AS3 library of futures as defined by [CommonJS](http://wiki.commonjs.org/wiki/Promises). 
+Create a deferred:
 
-A promise (aka [Future](http://en.wikipedia.org/wiki/Futures_and_promises)) is an object thats acts as a proxy for a result that my not be initially known, usually because the computation of its value has not yet completed. Developers *defer* processing by returning a promise to respond later. A **promise**is essentially a read-only version of the **deferred**response.
+	import com.codecatalyst.promise.Deferred;
+	
+	...
+	
+	var deferred:Deferred = new Deferred();
 
-* `new Deferred()`
-    * can add callbacks
-    * can be resolved or rejected
-    * can **promise()**to let you know what happened  
-&nbsp; 
- 
+Resolve that deferred:
+	
+	deferred.resolve( value );
 
-* Promise (accessed via `new Deferred().promise`)
-    * can add callbacks
-    * Can't resolve, so you know it's legit when it does
-    * Can check resolve status
-    * Can cancel (*only in AS3 version*)
+Or, reject that deferred:
 
-&nbsp;
+	deferred.reject( reason );
 
-Popularized in the [jQuery](http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js) javascript library, Deferred(s) are now available for AS3 developers. This library emulates the jQuery v1.7 feature set of futures: Deferred, Promise, and Callbacks. This library also supports two syntactical approaches familiar to either jQuery users or Actionscript/Flex developers.
- 
-Flex developers often use components asynchronously:
+Obtain the promise linked to that deferred to pass to external consumers:
 
-* setTimeOut()
-* setInterval()
-* callLater()
-* Timer
-* Loader
-* URLLoader
-* HTTPService
-* RemoteObject
-* WebService
-* NetStream
-* Socket
-* NetConnection
-* SharedObject
+	import com.codecatalyst.promise.Promise;
+	
+	...
+	
+	var promise:Promise = deferred.promise;
 
-The above components, unfortunately, do not have a consistent mechanism in which developers may handle the asynchronous responses… until now! With the above components developers would use:
+Add (optional) handlers to that promise:
 
-* addEventListener()
-* Responders
-* AsyncToken
-* closures (aka callbacks)
+	promise.then( onFulfilled, onRejected );
 
-## Why Deferred(s)
+## Internal Anatomy
 
-Now developers can employ `Deferred.as` to build promises of responses. The interface is always the same regardless of the component/mechanism used to fulfill the promise.
+This implementation decomposes Promise functionality into three classes:
 
-The biggest advantages are 
+### Promise
 
-1. Consistent, intuitive API for attaching handlers to asynchronous processes
-2. Ability to intercept and transform results before handlers are called
-3. Ability to chain futures in sequence
-4. Ability to process futures in parallel (aka batch processing)
+Promises represent a future value; i.e., a value that may not yet be available.
 
+A Promise's `then()` method is used to specify `onFulfilled` and `onRejected` callbacks that will be notified when the future value becomes available.  Those callbacks can subsequently transform the value that was resolved or the reason that was rejected.  Each call to `then()` returns a new Promise of that transformed value; i.e., a Promise that is resolved with the callback return value or rejected with any error thrown by the callback.
 
-  
+### Deferred
 
-## Learning Resources
-&nbsp; 
+A Deferred is typically used within the body of a function that performs an asynchronous operation.  When that operation succeeds, the Deferred should be resolved; if that operation fails, the Deferred should be rejected.
 
-* [Crockford on JavaScript - Act III: Function the Ultimate](http://www.youtube.com/watch?feature=player_detailpage&v=ya4UHuXNygM#t=2529s)
-* [Deferreds into jQuery](http://danheberden.com/presentations/jqsummit-deferreds-in-jquery/)
-* [Deferreds - Putting Laziness to Work](http://danheberden.com/presentations/deferreds-putting-laziness-to-work/#1)
-* [Creating Responsive Applications Using jQuery Deferred and Promises](http://msdn.microsoft.com/en-us/scriptjunkie/gg723713.aspx)
-* [The Power Of Closures - Deferred Object Bindings In jQuery](http://www.bennadel.com/blog/2125-The-Power-Of-Closures-Deferred-Object-Bindings-In-jQuery-1-5.htm)
-* [Fun with jQuery Deferred](http://intridea.com/2011/2/8/fun-with-jquery-deferred?blog=company)
-* [Understanding jQuery.Deferred and Promise](http://joseoncode.com/2011/09/26/a-walkthrough-jquery-deferred-and-promise/)
-* [A Graphical Explanation Of Javascript Closures In A jQuery Context](http://www.bennadel.com/blog/1482-A-Graphical-Explanation-Of-Javascript-Closures-In-A-jQuery-Context.htm)
-* [From callbacks... to $.Deferred... to $.Callbacks](http://demo.creative-area.net/jqcon2011-boston/#1)
-* [Using Promises to bind Button clicks](http://jsfiddle.net/ThomasBurleson/RTLr6/)
-* [Demystifying jQuery 1.7′s $.Callbacks](http://addyosmani.com/blog/jquery-1-7s-callbacks-feature-demystified/)
+Once a Deferred has been resolved or rejected, it is considered to be complete and subsequent calls to `resolve()` or `reject()` are ignored.
+
+Deferreds are the mechanism used to create new Promises.  A Deferred has a single associated Promise that can be safely returned to external consumers to ensure they do not interfere with the resolution or rejection of the deferred operation.
+
+### Resolver
+
+Resolvers are used internally by Deferreds and Promises to capture and notify callbacks, process callback return values and propogate resolution or rejection to chained Resolvers.
+
+Developers never directly interact with a Resolver.
+
+A Resolver captures a pair of optional `onResolved` and `onRejected` callbacks and has an associated Promise.  That Promise delegates its `then()` calls to the Resolver's `then()` method, which creates a new Resolver and schedules its delayed addition as a chained Resolver.
+
+Each Deferred has an associated Resolver.  A Deferred delegates `resolve()` and `reject()` calls to that Resolver's `resolve()` and `reject()` methods.  The Resolver processes the resolution value and rejection reason, and propogates the processed resolution value or rejection reason to any chained Resolvers it may have created in response to `then()` calls.  Once a chained Resolver has been notified, it is cleared out of the set of chained Resolvers and will not be notified again.
+
+## Reference and Reading
+
+* [Common JS Promises/A Specification](http://wiki.commonjs.org/wiki/Promises/A)
+* [Promises/A+ Specification](https://github.com/promises-aplus/promises-spec)
+* [You're Missing the Point of Promises](https://gist.github.com/3889970)
+
+## Acknowledgements
+
+* [Kris Zyp](https://github.com/kriszyp), who proposed the original [Common JS Promises/A Specification](http://wiki.commonjs.org/wiki/Promises/A) and created [node-promise](https://github.com/kriszyp/node-promise) and [promised-io](https://github.com/kriszyp/promised-io);
+* [Domenic Denicola](https://github.com/domenic) for the [Promises/A+ Specification](https://github.com/promises-aplus/promises-spec) and [Promises/A+ Compliance Test Suite](https://github.com/promises-aplus/promises-tests), and for his work with:
+* [Kris Kowal](https://github.com/kriskowal), who created [q](https://github.com/kriskowal/q), a JavaScript promise library that pioneered many of the practices now codified in the [Promises/A+ Specification](https://github.com/promises-aplus/promises-spec);
+* [Brian Cavalier](https://github.com/briancavalier) for his contributions to the [Promises/A+ Specification](https://github.com/promises-aplus/promises-spec) and [Promises/A+ Compliance Test Suite](https://github.com/promises-aplus/promises-tests), and the inspiration that [avow.js](https://github.com/briancavalier/avow) and [when.js](https://github.com/cujojs/when) (with [John Hann](https://github.com/unscriptable)) and [past GitHub issue discussions](https://github.com/cujojs/when/issues/60) have provided;
+* [Shaun Smith](https://github.com/darscan), who wrote [a similar AS3 port](https://gist.github.com/4519372) of promise.coffee;
+* [Jason Barry](http://dribbble.com/artifactdesign), who designed the promise-as3 logo.
+
+## License
+
+Copyright (c) 2013 [CodeCatalyst, LLC](http://www.codecatalyst.com/)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

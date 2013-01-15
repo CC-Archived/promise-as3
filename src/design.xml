@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<design version="2">
+	<namespaces>
+		<namespace prefix="promise" uri="http://ns.codecatalyst.com/2011/promise" />
+	</namespaces>
+
+	<categories>
+	</categories>
+	
+	<components>
+	</components>
+</design>
