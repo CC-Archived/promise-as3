@@ -36,8 +36,8 @@ package com.codecatalyst.promise
 		
 		/**
 		 * Returns a new Promise of the specified value, which may be an
-		 * immediate value, a Promise, an "untrusted" Promise (anything
-		 * that implements a then() method) or an AsyncToken.
+		 * immediate value, a Promise, a foreign Promise (i.e. Promises 
+		 * from another Promises/A implementation) or an AsyncToken.
 		 */
 		public static function when( value:* ):Promise
 		{

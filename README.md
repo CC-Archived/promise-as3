@@ -38,15 +38,15 @@ Add (optional) handlers to that promise:
 
 	promise.then( onFulfilled, onRejected );
 
-Immediate values, foreign Promises (e.g. Promises from another implementation, and AsyncTokens can be adapted using the Promise.when() helper method.
+Immediate values, foreign Promises (i.e. a Promise from another Promises/A implementation), and AsyncTokens can be adapted using the Promise.when() helper method.
 
 To adapt an immediate value:
 
 	var promise:Promise = Promise.when( 123 );
 
-To adapt a foreign Promise from another Promises/A implementation:
+To adapt a foreign Promise:
 
-	var promise:Promise = Promise.when( untrustedPromise );
+	var promise:Promise = Promise.when( foreignPromise );
 
 To adapt an AsyncToken:
 
