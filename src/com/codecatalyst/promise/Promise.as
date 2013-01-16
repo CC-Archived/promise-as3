@@ -22,11 +22,40 @@
 
 package com.codecatalyst.promise
 {
+	import mx.rpc.AsyncResponder;
+	import mx.rpc.AsyncToken;
+
 	/**
 	 * Promises represent a future value; i.e., a value that may not yet be available.
 	 */
 	public class Promise
 	{
+		// ========================================
+		// Public static methods
+		// ========================================
+		
+		/**
+		 * Returns a new Promise of the specified value, which may be an
+		 * immediate value, a Promise, an "untrusted" Promise (anything
+		 * that implements a then() method) or an AsyncToken.
+		 */
+		public static function when( value:* ):Promise
+		{
+			var deferred:Deferred = new Deferred();
+			
+			if ( value is AsyncToken )
+			{
+				var token:AsyncToken = value as AsyncToken;
+				token.addResponder( new AsyncResponder( deferred.resolve, deferred.reject, token ) );
+			}
+			else
+			{
+				deferred.resolve( value );
+			}
+			
+			return deferred.promise;
+		}
+		
 		// ========================================
 		// Protected properties
 		// ========================================
