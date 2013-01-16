@@ -38,6 +38,25 @@ Add (optional) handlers to that promise:
 
 	promise.then( onFulfilled, onRejected );
 
+Immediate values, "untrusted" Promises (e.g. Promises from another implementation, and AsyncTokens can be adapted using the Promise.when() helper method.
+
+To adapt an immediate value:
+
+	var promise:Promise = Promise.when( 123 );
+
+To adapt a Promise from another Promises/A implementation:
+
+	var promise:Promise = Promise.when( untrustedPromise );
+
+To adapt an AsyncToken:
+
+	var token:AsyncToken = ...
+	
+	...
+	
+	var promise:Promise = Promise.when( token );
+
+
 ## Internal Anatomy
 
 This implementation decomposes Promise functionality into three classes:
