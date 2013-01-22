@@ -261,7 +261,7 @@ package com.codecatalyst.promise
 				if ( callback != null )
 					value = callback( value );
 				
-				if ( value != null && value.then is Function )
+				if ( value != null && "then" in value && value.then is Function )
 				{
 					value.then( completeResolved, completeRejected );
 				}
