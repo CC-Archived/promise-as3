@@ -200,6 +200,13 @@ package com.codecatalyst.promise
 		 */
 		protected function propagate():void
 		{
+			// Dump rejects to console if cannot propogate
+
+			if (( completionAction == 'reject' ) && !pendingResolvers.length)
+						trace( "Resolver::reject( " + String(completionValue)  + " )" );
+
+			// Attempt to propogate
+
 			for each ( var pendingResolver:Resolver in pendingResolvers )
 			{
 				pendingResolver[ completionAction ]( completionValue );
@@ -261,7 +268,7 @@ package com.codecatalyst.promise
 				if ( callback != null )
 					value = callback( value );
 				
-				if ( value != null && "then" in value && value.then is Function )
+				if ( value != null && ("then" in value) && (value.then is Function) )
 				{
 					value.then( completeResolved, completeRejected );
 				}
