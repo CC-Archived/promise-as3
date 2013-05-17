@@ -26,7 +26,7 @@ package com.codecatalyst.promise
 
 	/**
 	 * Resolvers are used internally by Deferreds and Promises to capture and 
-	 * notify callbacks, process callback return values and propogate resolution 
+	 * notify callbacks, process callback return values and propagate resolution
 	 * or rejection to chained Resolvers.
 	 * 
 	 * Developers never directly interact with a Resolver.
@@ -39,7 +39,7 @@ package com.codecatalyst.promise
 	 * Each Deferred has an associated Resolver. A Deferred delegates resolve()
 	 * and reject() calls to that Resolver's resolve() and reject() methods. 
 	 * The Resolver processes the resolution value and rejection reason, and 
-	 * propogates the processed resolution value or rejection reason to any 
+	 * propagates the processed resolution value or rejection reason to any
 	 * chained Resolvers it may have created in response to then() calls. Once 
 	 * a chained Resolver has been notified, it is cleared out of the set of 
 	 * chained Resolvers and will not be notified again.
@@ -81,7 +81,7 @@ package com.codecatalyst.promise
 		/**
 		 * Pending chained resolvers.
 		 */
-		protected var pendingResolvers:Array;
+		protected var pending:Array = [];
 		
 		/**
 		 * Indicates whether this Resolver has been processed.
@@ -109,27 +109,9 @@ package com.codecatalyst.promise
 		
 		public function Resolver( onResolved:Function = null, onRejected:Function = null )
 		{
-			/**
-			 * Default rejection handler, used when none is specified in order
-			 * to propagate errors to chained Resolvers.
-			 */
-			function defaultRejectionHandler( error:* ):void
-			{
-				throw error;
-			}
-			
 			this.onResolved = onResolved;
-			this.onRejected = onRejected;
-
-			this._promise = new Promise( this );
-			this.pendingResolvers = [];
-			this.processed = false;
-			this.completed = false;
-			this.completionAction = null;
-			this.completionValue = undefined;
-			
-			if ( ! ( this.onRejected != null ) )
-				this.onRejected = defaultRejectionHandler;	
+			this.onRejected = onRejected || explode;
+			this._promise = new Promise(this);
 		}
 		
 		// ========================================
@@ -176,15 +158,8 @@ package com.codecatalyst.promise
 		{
 			if ( onResolved != null || onRejected != null )
 			{
-				var pendingResolver:Resolver = new Resolver( onResolved, onRejected );
-				
-				function schedulePendingResolver():void
-				{
-					schedule( pendingResolver );
-				}
-				
-				nextTick( schedulePendingResolver );
-				
+				const pendingResolver:Resolver = new Resolver( onResolved, onRejected );
+				nextTick( schedule, [pendingResolver] );
 				return pendingResolver.promise;
 			}
 			
@@ -196,13 +171,13 @@ package com.codecatalyst.promise
 		// ========================================
 		
 		/**
-		 * Propage the completion value to any pending Resolvers.
+		 * Propagate the completion value to any pending Resolvers.
 		 */
 		protected function propagate():void
 		{
-			for each ( var pendingResolver:Resolver in pendingResolvers )
+			for each ( var resolver:Resolver in pending.splice(0) )
 			{
-				pendingResolver[ completionAction ]( completionValue );
+				resolver[ completionAction ]( completionValue );
 			}
 		}
 		
@@ -210,9 +185,9 @@ package com.codecatalyst.promise
 		 * Schedule a Resolver as a pending Resolver, to be notified in a
 		 * future event loop tick when the future value becomes available.
 		 */
-		protected function schedule( pendingResolver:Resolver ):void
+		protected function schedule( resolver:Resolver ):void
 		{
-			pendingResolvers.push( pendingResolver );
+			pending.push( resolver );
 			
 			if ( completed )
 				propagate();
@@ -223,8 +198,8 @@ package com.codecatalyst.promise
 		 */
 		protected function complete( action:String, value:* ):void
 		{
-			onResolved = onRejected = null;
-			
+			onResolved = null;
+			onRejected = null;
 			completionAction = action;
 			completionValue = value;
 			completed = true;
@@ -241,7 +216,7 @@ package com.codecatalyst.promise
 		}
 		
 		/**
-		 * Complets this Resolver with a rejection error.
+		 * Completes this Resolver with a rejection error.
 		 */
 		protected function completeRejected( error:* ):void
 		{
@@ -259,8 +234,18 @@ package com.codecatalyst.promise
 			try
 			{
 				if ( callback != null )
-					value = callback( value );
-				
+				{
+					// Allow handlers without arguments
+					const result:* = callback.length == 0
+							? callback()
+							: callback(value);
+
+					// Do not overwrite the value for undefined returns (void)
+					if (result !== undefined)
+						value = result;
+				}
+
+				// Softly check for a returned Promise
 				if ( value != null && "then" in value && value.then is Function )
 				{
 					value.then( completeResolved, completeRejected );
@@ -274,6 +259,17 @@ package com.codecatalyst.promise
 			{
 				completeRejected( error );
 			}
+		}
+
+		/**
+		 * Default rejection handler, used when none is specified in order
+		 * to propagate errors to chained Resolvers.
+		 *
+		 * @param error The uncaught error
+		 */
+		private function explode(error:*):void
+		{
+			throw error;
 		}
 	}
 }
