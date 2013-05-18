@@ -26,12 +26,27 @@ package com.codecatalyst.promise.adapters
 	import mx.rpc.AsyncToken;
 
 	/**
-	 * Adapts IResponder interface to delegate result and fault as resolution and rejection of a Deferred.
+	 * To deal with AsyncTokens add the following adapter:
 	 *
+	 * <code>Promise.registerAdapter(AsyncTokenAdapter.adapt)</code>
+	 *
+	 * Now, when an AsyncToken is passed to <code>Promise.when</code>
+	 * a specifically adapted Promise is returned.
+	 *
+	 * To remove the adapter:
+	 *
+	 * <code>Promise.removeAdapter(AsyncTokenAdapter.adapt)</code>
 	 */
 	public class AsyncTokenAdapter
 	{
 
+		/**
+		 * Adapter function. Returns an adapted Promise
+		 * or null when the value is not adaptable.
+		 *
+		 * @param value The value to adapt
+		 * @return The adapted value or null
+		 */
 		public static function adapt(value:*):Promise
 		{
 			const token:AsyncToken = value as AsyncToken;
