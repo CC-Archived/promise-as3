@@ -40,16 +40,16 @@ package com.codecatalyst.promise
 		 *
 		 * For example, to deal with AsyncTokens add the following adapter:
 		 *
-		 * <code>Promise.registerAdapter(AsyncTokenAdapter)</code>
+		 * <code>Promise.registerAdapter(AsyncTokenAdapter.adapt)</code>
 		 *
 		 * Now, when an AsyncToken is passed to <code>when</code>
 		 * a specifically adapted Promise is returned.
 		 */
 		public static function when( value:* ):Promise
 		{
-			for each (var adapter:Class in adapters)
+			for each (var adapt:Function in adapters)
 			{
-				const promise:Promise = adapter["adapt"](value) as Promise;
+				const promise:Promise = adapt(value) as Promise;
 				if (promise)
 					return promise;
 			}
@@ -60,13 +60,13 @@ package com.codecatalyst.promise
 
 		private static const adapters:Array = [];
 
-		public static function registerAdapter(adapter:Class):void
+		public static function registerAdapter(adapter:Function):void
 		{
 			if (adapters.indexOf(adapter) == -1)
 				adapters.push(adapter);
 		}
 
-		public static function removeAdapter(adapter:Class):void
+		public static function removeAdapter(adapter:Function):void
 		{
 			const index:int = adapters.indexOf(adapter);
 			index > -1 && adapters.splice(index, 1);

@@ -5,8 +5,9 @@
 //  in accordance with the terms of the license agreement accompanying it. 
 //------------------------------------------------------------------------------
 
-package com.codecatalyst.promise
+package com.codecatalyst.promise.adapters
 {
+	import com.codecatalyst.promise.Promise;
 	import mx.core.mx_internal;
 	import mx.rpc.AsyncToken;
 	import mx.rpc.Fault;
@@ -37,13 +38,13 @@ package com.codecatalyst.promise
 		public function before():void
 		{
 			token = new AsyncToken();
-			Promise.registerAdapter(AsyncTokenAdapter);
+			Promise.registerAdapter(AsyncTokenAdapter.adapt);
 		}
 
 		[After]
 		public function after():void
 		{
-			Promise.removeAdapter(AsyncTokenAdapter);
+			Promise.removeAdapter(AsyncTokenAdapter.adapt);
 		}
 
 		/*============================================================================*/

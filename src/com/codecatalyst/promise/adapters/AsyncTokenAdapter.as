@@ -20,8 +20,9 @@
 // THE SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.codecatalyst.promise
+package com.codecatalyst.promise.adapters
 {
+	import com.codecatalyst.promise.*;
 	import mx.rpc.AsyncToken;
 
 	/**
