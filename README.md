@@ -77,13 +77,13 @@ Deferreds are the mechanism used to create new Promises.  A Deferred has a singl
 
 ### Resolver
 
-Resolvers are used internally by Deferreds and Promises to capture and notify callbacks, process callback return values and propogate resolution or rejection to chained Resolvers.
+Resolvers are used internally by Deferreds and Promises to capture and notify callbacks, process callback return values and propagate resolution or rejection to chained Resolvers.
 
 Developers never directly interact with a Resolver.
 
 A Resolver captures a pair of optional `onResolved` and `onRejected` callbacks and has an associated Promise.  That Promise delegates its `then()` calls to the Resolver's `then()` method, which creates a new Resolver and schedules its delayed addition as a chained Resolver.
 
-Each Deferred has an associated Resolver.  A Deferred delegates `resolve()` and `reject()` calls to that Resolver's `resolve()` and `reject()` methods.  The Resolver processes the resolution value and rejection reason, and propogates the processed resolution value or rejection reason to any chained Resolvers it may have created in response to `then()` calls.  Once a chained Resolver has been notified, it is cleared out of the set of chained Resolvers and will not be notified again.
+Each Deferred has an associated Resolver.  A Deferred delegates `resolve()` and `reject()` calls to that Resolver's `resolve()` and `reject()` methods.  The Resolver processes the resolution value and rejection reason, and propagates the processed resolution value or rejection reason to any chained Resolvers it may have created in response to `then()` calls.  Once a chained Resolver has been notified, it is cleared out of the set of chained Resolvers and will not be notified again.
 
 ## Reference and Reading
 
