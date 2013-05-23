@@ -22,8 +22,6 @@
 
 package com.codecatalyst.promise
 {
-	import mx.rpc.AsyncToken;
-
 	/**
 	 * Promises represent a future value; i.e., a value that may not yet be available.
 	 */
@@ -32,37 +30,56 @@ package com.codecatalyst.promise
 		// ========================================
 		// Public static methods
 		// ========================================
-		
+
 		/**
 		 * Returns a new Promise of the specified value, which may be an
 		 * immediate value, a Promise, a foreign Promise (i.e. Promises 
-		 * from another Promises/A implementation) or an AsyncToken.
+		 * from another Promises/A implementation).
+		 *
+		 * You can register your own adapters using <code>registerAdapter</code>.
+		 *
+		 * For example, to deal with AsyncTokens add the following adapter:
+		 *
+		 * <code>Promise.registerAdapter(AsyncTokenAdapter.adapt)</code>
+		 *
+		 * Now, when an AsyncToken is passed to <code>when</code>
+		 * a specifically adapted Promise is returned.
 		 */
 		public static function when( value:* ):Promise
 		{
-			var deferred:Deferred = new Deferred();
-			
-			if ( value is AsyncToken )
+			for each (var adapt:Function in adapters)
 			{
-				var token:AsyncToken = value as AsyncToken;
-				token.addResponder( new DeferredResponder( deferred ) );
+				const promise:Promise = adapt(value) as Promise;
+				if (promise)
+					return promise;
 			}
-			else
-			{
-				deferred.resolve( value );
-			}
-			
+			const deferred:Deferred = new Deferred();
+			deferred.resolve( value);
 			return deferred.promise;
+		}
+
+		private static const adapters:Array = [];
+
+		public static function registerAdapter(adapter:Function):void
+		{
+			if (adapters.indexOf(adapter) == -1)
+				adapters.push(adapter);
+		}
+
+		public static function removeAdapter(adapter:Function):void
+		{
+			const index:int = adapters.indexOf(adapter);
+			index > -1 && adapters.splice(index, 1);
 		}
 		
 		// ========================================
-		// Protected properties
+		// Private properties
 		// ========================================
 		
 		/**
 		 * Internal Resolver for this Promise.
 		 */
-		protected var resolver:Resolver;
+		private var resolver:Resolver;
 		
 		// ========================================
 		// Constructor
@@ -88,65 +105,9 @@ package com.codecatalyst.promise
 		 * that is resolved with the callback return value or rejected with 
 		 * any error thrown by the callback.
 		 */
-		public function then( onFullfilled:Function = null, onRejected:Function = null ):Promise
+		public function then( onFulfilled:Function = null, onRejected:Function = null ):Promise
 		{
-			return resolver.then( onFullfilled, onRejected );
+			return resolver.then( onFulfilled, onRejected );
 		}
-	}
-}
-import com.codecatalyst.promise.Deferred;
-
-import mx.rpc.IResponder;
-import mx.rpc.events.FaultEvent;
-import mx.rpc.events.ResultEvent;
-
-/**
- * Adapts IResponder interface to delegate result and fault as resolution and rejection of a Deferred.
- * 
- * @private
- */
-class DeferredResponder implements IResponder
-{
-	// ========================================
-	// Protected properties
-	// ========================================
-	
-	protected var deferred:Deferred;
-	
-	// ========================================
-	// Constructor
-	// ========================================
-	
-	function DeferredResponder( deferred:Deferred )
-	{
-		super();
-		
-		this.deferred = deferred;
-	}
-	
-	// ========================================
-	// Public methods
-	// ========================================
-	
-	/**
-	 * @inheritDoc
-	 */
-	public function result( data:Object ):void
-	{
-		if ( data is ResultEvent )
-			deferred.resolve( data.result );
-		else
-			deferred.resolve( data );
-	}
-	
-	/**
-	 * @inheritDoc
-	 */
-	public function fault( info:Object ):void
-	{
-		if ( info is FaultEvent )
-			deferred.reject( info.fault );
-		else
-			deferred.reject( info );
 	}
 }
