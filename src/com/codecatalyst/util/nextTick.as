@@ -27,7 +27,7 @@ package com.codecatalyst.util
 	 */
 	public function nextTick( callback:Function, parameters:Array = null ):void
 	{
-		CallbackQueue.instance.schedule( callback );
+		CallbackQueue.instance.schedule( callback, parameters );
 	}
 }
 

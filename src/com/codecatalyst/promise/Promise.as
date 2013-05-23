@@ -22,8 +22,6 @@
 
 package com.codecatalyst.promise
 {
-	import mx.rpc.AsyncToken;
-
 	/**
 	 * Promises represent a future value; i.e., a value that may not yet be available.
 	 */
@@ -32,37 +30,78 @@ package com.codecatalyst.promise
 		// ========================================
 		// Public static methods
 		// ========================================
-		
+
 		/**
 		 * Returns a new Promise of the specified value, which may be an
-		 * immediate value, a Promise, a foreign Promise (i.e. Promises 
-		 * from another Promises/A implementation) or an AsyncToken.
+		 * immediate value, a Promise, or a foreign Promise (i.e. Promises 
+		 * from another Promises/A implementation).
+		 * 
+		 * Additionally, the specified value can be adapted into a Promise
+		 * through the use of custom adapters.
+		 * 
+		 * @see #registerAdapter()
+		 * @see #unregisterAdapter()
+		 * @see com.codecatalyst.promise.adapters.AsyncTokenAdapter
 		 */
 		public static function when( value:* ):Promise
 		{
-			var deferred:Deferred = new Deferred();
-			
-			if ( value is AsyncToken )
+			for each ( var adapt:Function in adapters )
 			{
-				var token:AsyncToken = value as AsyncToken;
-				token.addResponder( new DeferredResponder( deferred ) );
-			}
-			else
-			{
-				deferred.resolve( value );
+				const promise:Promise = adapt( value ) as Promise;
+				if ( promise )
+					return promise;
 			}
 			
+			const deferred:Deferred = new Deferred();
+			deferred.resolve( value );
 			return deferred.promise;
+		}
+
+		/**
+		 * Registers a custom adapter function capable of adapting values
+		 * passed to <code>Promise.when()</code> into Promises.
+		 * 
+		 * A custom adapter function is called with a candidate value and
+		 * should return either a Promise that adapts that value or null if the
+		 * adapter cannot adapt that value.
+		 * 
+		 * @see #unregisterAdapter()
+		 */
+		public static function registerAdapter( adapter:Function ):void
+		{
+			if ( adapters.indexOf( adapter ) == -1 )
+				adapters.push( adapter );
+		}
+
+		/**
+		 * Unregisters a custom adapter function.
+		 * 
+		 * @see #registerAdapter()
+		 */
+		public static function unregisterAdapter( adapter:Function ):void
+		{
+			const index:int = adapters.indexOf( adapter );
+			if ( index > -1 )
+				adapters.splice( index, 1 );
 		}
 		
 		// ========================================
-		// Protected properties
+		// Private static methods
+		// ========================================
+		
+		/**
+		 * Array of registered adapter functions.
+		 */
+		private static const adapters:Array = [];
+		
+		// ========================================
+		// Private properties
 		// ========================================
 		
 		/**
 		 * Internal Resolver for this Promise.
 		 */
-		protected var resolver:Resolver;
+		private var resolver:Resolver;
 		
 		// ========================================
 		// Constructor
@@ -88,65 +127,9 @@ package com.codecatalyst.promise
 		 * that is resolved with the callback return value or rejected with 
 		 * any error thrown by the callback.
 		 */
-		public function then( onFullfilled:Function = null, onRejected:Function = null ):Promise
+		public function then( onFulfilled:Function = null, onRejected:Function = null ):Promise
 		{
-			return resolver.then( onFullfilled, onRejected );
+			return resolver.then( onFulfilled, onRejected );
 		}
-	}
-}
-import com.codecatalyst.promise.Deferred;
-
-import mx.rpc.IResponder;
-import mx.rpc.events.FaultEvent;
-import mx.rpc.events.ResultEvent;
-
-/**
- * Adapts IResponder interface to delegate result and fault as resolution and rejection of a Deferred.
- * 
- * @private
- */
-class DeferredResponder implements IResponder
-{
-	// ========================================
-	// Protected properties
-	// ========================================
-	
-	protected var deferred:Deferred;
-	
-	// ========================================
-	// Constructor
-	// ========================================
-	
-	function DeferredResponder( deferred:Deferred )
-	{
-		super();
-		
-		this.deferred = deferred;
-	}
-	
-	// ========================================
-	// Public methods
-	// ========================================
-	
-	/**
-	 * @inheritDoc
-	 */
-	public function result( data:Object ):void
-	{
-		if ( data is ResultEvent )
-			deferred.resolve( data.result );
-		else
-			deferred.resolve( data );
-	}
-	
-	/**
-	 * @inheritDoc
-	 */
-	public function fault( info:Object ):void
-	{
-		if ( info is FaultEvent )
-			deferred.reject( info.fault );
-		else
-			deferred.reject( info );
 	}
 }
