@@ -33,44 +33,66 @@ package com.codecatalyst.promise
 
 		/**
 		 * Returns a new Promise of the specified value, which may be an
-		 * immediate value, a Promise, a foreign Promise (i.e. Promises 
+		 * immediate value, a Promise, or a foreign Promise (i.e. Promises 
 		 * from another Promises/A implementation).
-		 *
-		 * You can register your own adapters using <code>registerAdapter</code>.
-		 *
-		 * For example, to deal with AsyncTokens add the following adapter:
-		 *
-		 * <code>Promise.registerAdapter(AsyncTokenAdapter.adapt)</code>
-		 *
-		 * Now, when an AsyncToken is passed to <code>when</code>
-		 * a specifically adapted Promise is returned.
+		 * 
+		 * Additionally, the specified value can be adapted into a Promise
+		 * through the use of custom adapters.
+		 * 
+		 * @see #registerAdapter()
+		 * @see #unregisterAdapter()
+		 * @see com.codecatalyst.promise.adapters.AsyncTokenAdapter
 		 */
 		public static function when( value:* ):Promise
 		{
-			for each (var adapt:Function in adapters)
+			for each ( var adapt:Function in adapters )
 			{
-				const promise:Promise = adapt(value) as Promise;
-				if (promise)
+				const promise:Promise = adapt( value ) as Promise;
+				if ( promise )
 					return promise;
 			}
+			
 			const deferred:Deferred = new Deferred();
-			deferred.resolve( value);
+			deferred.resolve( value );
 			return deferred.promise;
 		}
 
+		/**
+		 * Registers a custom adapter function capable of adapting values
+		 * passed to <code>Promise.when()</code> into Promises.
+		 * 
+		 * A custom adapter function is called with a candidate value and
+		 * should return either a Promise that adapts that value or null if the
+		 * adapter cannot adapt that value.
+		 * 
+		 * @see #unregisterAdapter()
+		 */
+		public static function registerAdapter( adapter:Function ):void
+		{
+			if ( adapters.indexOf( adapter ) == -1 )
+				adapters.push( adapter );
+		}
+
+		/**
+		 * Unregisters a custom adapter function.
+		 * 
+		 * @see #registerAdapter()
+		 */
+		public static function unregisterAdapter( adapter:Function ):void
+		{
+			const index:int = adapters.indexOf( adapter );
+			if ( index > -1 )
+				adapters.splice( index, 1 );
+		}
+		
+		// ========================================
+		// Private static methods
+		// ========================================
+		
+		/**
+		 * Array of registered adapter functions.
+		 */
 		private static const adapters:Array = [];
-
-		public static function registerAdapter(adapter:Function):void
-		{
-			if (adapters.indexOf(adapter) == -1)
-				adapters.push(adapter);
-		}
-
-		public static function removeAdapter(adapter:Function):void
-		{
-			const index:int = adapters.indexOf(adapter);
-			index > -1 && adapters.splice(index, 1);
-		}
 		
 		// ========================================
 		// Private properties

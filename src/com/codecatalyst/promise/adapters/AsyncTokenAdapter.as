@@ -22,39 +22,35 @@
 
 package com.codecatalyst.promise.adapters
 {
-	import com.codecatalyst.promise.*;
+	import com.codecatalyst.promise.Promise;
 	import mx.rpc.AsyncToken;
 
 	/**
-	 * To deal with AsyncTokens add the following adapter:
-	 *
+	 * AsyncTokenAdapter is an adapter used to enable 
+	 * <code>Promise.when()</code> to convert AsyncTokens to Promises.
+	 * 
+	 * To register this adapter:
 	 * <code>Promise.registerAdapter(AsyncTokenAdapter.adapt)</code>
 	 *
-	 * Now, when an AsyncToken is passed to <code>Promise.when</code>
-	 * a specifically adapted Promise is returned.
-	 *
-	 * To remove the adapter:
-	 *
+	 * To unregister this adapter:
 	 * <code>Promise.removeAdapter(AsyncTokenAdapter.adapt)</code>
 	 */
 	public class AsyncTokenAdapter
 	{
-
 		/**
-		 * Adapter function. Returns an adapted Promise
-		 * or null when the value is not adaptable.
-		 *
-		 * @param value The value to adapt
-		 * @return The adapted value or null
+		 * Adapts an AsyncToken as a Promise.
+		 * 
+		 * @param value A candidate value that might be an AsyncToken.
+		 * @return A Promise adapting a AsyncToken or null
 		 */
-		public static function adapt(value:*):Promise
+		public static function adapt( value:* ):Promise
 		{
 			const token:AsyncToken = value as AsyncToken;
-			if (token)
+			if ( token )
 			{
-				const deferred:Deferred = new Deferred();
-				token.addResponder(new DeferredResponder(deferred));
-				return deferred.promise;
+				const responder:DeferredResponder = new DeferredResponder();
+				token.addResponder( responder );
+				return responder.promise;
 			}
 			return null;
 		}
@@ -62,30 +58,48 @@ package com.codecatalyst.promise.adapters
 }
 
 import com.codecatalyst.promise.Deferred;
+import com.codecatalyst.promise.Promise;
+
 import mx.rpc.IResponder;
 import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
 
 /**
- * Adapts IResponder interface to delegate result and fault as resolution and rejection of a Deferred.
+ * Implements the IResponder interface to delegate result and fault as 
+ * resolution and rejection of a Deferred.
  *
  * @private
  */
 class DeferredResponder implements IResponder
 {
 	// ========================================
-	// Protected properties
+	// Public properties
 	// ========================================
 
-	protected var deferred:Deferred;
+	/**
+	 * Promise of the future value of this Responder.
+	 */
+	public function get promise():Promise
+	{
+		return deferred.promise;
+	}
+	
+	// ========================================
+	// Private properties
+	// ========================================
+	
+	/**
+	 * Internal Deferred for this Responder.
+	 */
+	private var deferred:Deferred;
 
 	// ========================================
 	// Constructor
 	// ========================================
 
-	function DeferredResponder( deferred:Deferred )
+	function DeferredResponder()
 	{
-		this.deferred = deferred;
+		this.deferred = new Deferred();
 	}
 
 	// ========================================
@@ -97,9 +111,8 @@ class DeferredResponder implements IResponder
 	 */
 	public function result( data:Object ):void
 	{
-		data is ResultEvent
-			? deferred.resolve( data.result )
-			: deferred.resolve( data );
+		var value:* = ( data is ResultEvent ) ? data.result : data;
+		deferred.resolve( value );
 	}
 
 	/**
@@ -107,8 +120,7 @@ class DeferredResponder implements IResponder
 	 */
 	public function fault( info:Object ):void
 	{
-		info is FaultEvent
-			? deferred.reject( info.fault )
-			: deferred.reject( info );
+		var error:* = ( info is FaultEvent ) ? info.fault : info;
+		deferred.reject( error );
 	}
 }

@@ -8,11 +8,13 @@
 package com.codecatalyst.promise.adapters
 {
 	import com.codecatalyst.promise.Promise;
+	
 	import mx.core.mx_internal;
 	import mx.rpc.AsyncToken;
 	import mx.rpc.Fault;
 	import mx.rpc.events.FaultEvent;
 	import mx.rpc.events.ResultEvent;
+	
 	import org.flexunit.async.Async;
 	import org.hamcrest.assertThat;
 	import org.hamcrest.object.equalTo;
@@ -44,7 +46,7 @@ package com.codecatalyst.promise.adapters
 		[After]
 		public function after():void
 		{
-			Promise.removeAdapter(AsyncTokenAdapter.adapt);
+			Promise.unregisterAdapter(AsyncTokenAdapter.adapt);
 		}
 
 		/*============================================================================*/
