@@ -112,7 +112,7 @@ package com.codecatalyst.promise
 		*/
 		protected function notifyCallback( callback:Function = null, scope:Object = null ):void
 		{
-			if ( callback	&& (callback.length == 1) )
+			if ( (callback != null)	&& (callback.length == 1) )
 			{
 				callback.apply( scope, [ this ] );
 			}
