@@ -37,20 +37,30 @@ package com.codecatalyst.promise.adapters
      *
      * Usage example:
      * <code>
-     *     var readMeURL = "https://raw.github.com/ThomasBurleson/promise-as3/master/README.md"
-     *     var loader = new URLLoader();
+     *     function loadDocument( url : String ):Promise
+     *     {
+     *          var loader = new URLLoader();
+     *              loader.load( new URLRequest( url ) );
      *
-     *         loader.load( new URLRequest( readMeURL ) );
+     *         return Promise.when( loader );
+     *     }
      *
-     *         Promise.when( loader )
-     *                .then(
-     *                      function onImageLoaded( docReadMe:String ):void {
-     *                          // Do something with this ReadMe.md data...
-     *                      },
-     *                      function onLoadError( errorID:String ):void {
-     *                         // Report the error loading the ReadMe.md document
-     *                     }
-     *                 );
+     *     loadDocument(
+     *
+     *       "https://raw.github.com/ThomasBurleson/promise-as3/master/README.md"
+     *
+     *     ).then(
+     *
+     *       function onImageLoaded( docReadMe:String ):void {
+     *           // Do something with this ReadMe.md data...
+     *       },
+     *
+     *       function onLoadError( errorID:String ):void {
+     *          // Report the error loading the ReadMe.md document
+     *       }
+     *
+     *     );
+     *
      *</code>
      *
      */
