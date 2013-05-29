@@ -28,6 +28,86 @@ package com.codecatalyst.promise.inteceptors
     import flash.events.IEventDispatcher;
     import flash.utils.getQualifiedClassName;
 
+    /**
+     * EventInterceptor is class that wraps event dispatchers to listen to 1...n events
+     * and extract data when those events occur. The EventInterceptor is configured in 2-phases:
+     *
+     *   1) new EventInterceptor() or ::intercept() - to define result and fault events and data keys
+     *   2) addCallbacks() - to register callback result/fault handlers
+     *
+     * Only when addCallbacks() is invoked are the listeners attached.
+     * When the result or fault event is detected, the callback is triggered/notified and the listeners
+     * are all removed.
+     *
+     * Usage example:
+     * <code>
+     *
+     *     // Authenticator is an event dispatcher with two (2) custom
+     *     // response events: AUTHENTICATED and NOT_ALLOWED
+     *
+     *     var authenticator : Authenticator    = new Authenticator;
+
+     *         authenticator.loginUser( userName, password );
+
+     *     var interceptor   : EventIntercepter = new EventIntercepter( authenticator );
+     *
+     *         interceptor.intercept(
+     *                       { type: AuthenticationEvent.AUTHENTICATED, key: 'session' },
+     *                       { type: AuthenticationEvent.NOT_ALLOWED,   key: 'details' }
+     *                    )
+     *                    .addCallbacks (
+     *                       function onLoginOK( session:Object ):void {
+     *                           // Save the session information and continue login process
+     *                       },
+     *
+     *                       function onLoginFailed( fault:Object  ):void {
+     *                          // Report the login failure and request another attempt
+     *                       }
+     *                    );
+     *
+     *</code>
+     *
+     * This class is actually intended to be used with Promise.when() and the DispatcherAdapter.
+     * The resulting code usage is significantly more intuitive and useful:
+     *
+     * <code>
+     *
+     *     // The EventIntercepter listens for specific events from authenticator
+     *     // and extracts data based on the specified keys; e.g. `session` and `details`
+     *
+     *     function loginUser( userName:String, password:String ):Promise
+     *     {
+     *          var authenticator : Authenticator = new Authenticator;
+     *
+     *              authenticator.loginUser( userName, password );
+     *
+     *         return Promise.when( new EventIntercepter (
+     *                  authenticator,
+     *                  AuthenticationEvent.AUTHENTICATED, 'session',
+     *                  AuthenticationEvent.NOT_ALLOWED,   'details'
+     *         ));
+     *     }
+     *
+     *
+     *     loginUser(
+     *          'ThomasB',
+     *          "superSecretPassword"
+     *     )
+     *     .then(
+     *
+     *         function onLoginOK( session:Object ):void {
+     *             // Save the session information and continue login process
+     *         },
+     *
+     *         function onLoginFailed( fault:Object  ):void {
+     *            // Report the login failure and request another attempt
+     *         }
+     *
+     *     );
+     *
+     *</code>
+     *
+     */
     public class EventIntercepter
     {
         /**
@@ -72,9 +152,10 @@ package com.codecatalyst.promise.inteceptors
          * and add listeners. Build addCallBacks() function that allows external users to submit
          * result and fault callback handlers to these events.
          *
-         * @param resultEvents
-         * @param faultEvents
-         * @return
+         * @param resultEvents  Object or Array of { type:"", key:""} name/value pairs
+         * @param faultEvents   Object or Array of { type:"", key:""} name/value pairs
+         *
+         * @return EventIntercepter instance (useful for chaining)
          */
         public function intercept( resultEvents:Object, faultEvents:Object=null ): EventIntercepter
         {
