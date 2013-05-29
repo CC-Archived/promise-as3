@@ -79,33 +79,6 @@ package com.codecatalyst.promise.adapters
             return loader ? new DeferredLoader( loader ).promise : null;
         }
 
-        // ******************************************************
-        // Protected, Static initializer
-        // ******************************************************
-
-        /**
-         *  Auto-register the `adapt` function for Promise.when()
-         * Activator to register this adapter with the Promise when() adaptor registry
-         * @return
-         */
-        public static function register():void
-        {
-            Promise.registerAdapter( URLLoaderAdapter.adapt );
-        }
-
-
-        {
-            /**
-             * Class-level, global anonymous initializer
-             * that auto-registers for the `adapt` function within Promise.when()
-             */
-            (function():void
-            {
-               URLLoaderAdapter.register();
-            })( );
-
-        }
-
     }
 }
 

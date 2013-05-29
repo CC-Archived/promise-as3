@@ -22,6 +22,8 @@
 
 package com.codecatalyst.promise
 {
+	import com.codecatalyst.promise.adapters.registerAdpaters;
+
 	/**
 	 * Promises represent a future value; i.e., a value that may not yet be available.
 	 */
@@ -45,6 +47,8 @@ package com.codecatalyst.promise
 		 */
 		public static function when( value:* ):Promise
 		{
+			autoRegister();
+
 			for each ( var adapt:Function in adapters )
 			{
 				const promise:Promise = adapt( value ) as Promise;
@@ -131,5 +135,17 @@ package com.codecatalyst.promise
 		{
 			return resolver.then( onFulfilled, onRejected );
 		}
+
+		/**
+		* Run (1x) the registerAdapters() global registration process
+		*/
+		private static function autoRegister():void {
+	 		if ( !_registered ) {
+				  registerAdpaters();
+				  _registered = true;
+	 	}
+		}
+
+		private static var _registered : Boolean;
 	}
 }

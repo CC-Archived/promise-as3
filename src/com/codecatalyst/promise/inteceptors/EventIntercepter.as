@@ -61,9 +61,6 @@ package com.codecatalyst.promise.inteceptors
                 ( faultType  && faultKey  ) ? { type : faultType,      key : faultKey}   : null
             )
 
-            // Since the EventIntercepter is `adapted` by DispatcherAdapter, don't forget to
-            // silently, auto-register the adapter with Promise
-            DispatcherAdapter.register();
         }
 
         // *************************************************************

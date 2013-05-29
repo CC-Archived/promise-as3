@@ -98,20 +98,6 @@ package com.codecatalyst.promise.adapters
             return interceptor ? new DeferredDispatcher( interceptor ).promise : null;
         }
 
-        // ******************************************************
-        // Protected, internal Static features
-        // ******************************************************
-
-        /**
-         *  Auto-register the `adapt` function for Promise.when()
-         * Activator to register this adapter with the Promise when() adaptor registry
-         * @return
-         */
-        public static function register():void
-        {
-            Promise.registerAdapter( DispatcherAdapter.adapt );
-        }
-
     }
 }
 
