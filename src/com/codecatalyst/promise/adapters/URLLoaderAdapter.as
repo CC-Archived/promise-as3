@@ -23,6 +23,7 @@
 package com.codecatalyst.promise.adapters
 {
     import com.codecatalyst.promise.Promise;
+    import com.codecatalyst.promise.adapters.URLLoaderAdapter;
 
     import flash.net.URLLoader;
 
@@ -79,23 +80,32 @@ package com.codecatalyst.promise.adapters
         }
 
         // ******************************************************
-        // Protected, internal Static features
+        // Protected, Static initializer
         // ******************************************************
 
         /**
+         *  Auto-register the `adapt` function for Promise.when()
          * Activator to register this adapter with the Promise when() adaptor registry
          * @return
          */
-        protected static function initialize():Boolean
+        public static function register():void
         {
             Promise.registerAdapter( URLLoaderAdapter.adapt );
-            return true;
         }
 
-        /**
-         * Auto-register the `adapt` function for Promise.when()
-         */
-        protected static var _initialized : Boolean = initialize();
+
+        {
+            /**
+             * Class-level, global anonymous initializer
+             * that auto-registers for the `adapt` function within Promise.when()
+             */
+            (function():void
+            {
+               URLLoaderAdapter.register();
+            })( );
+
+        }
+
     }
 }
 

@@ -103,19 +103,15 @@ package com.codecatalyst.promise.adapters
         // ******************************************************
 
         /**
+         *  Auto-register the `adapt` function for Promise.when()
          * Activator to register this adapter with the Promise when() adaptor registry
          * @return
          */
-        protected static function initialize():Boolean
+        public static function register():void
         {
             Promise.registerAdapter( DispatcherAdapter.adapt );
-            return true;
         }
 
-        /**
-         * Auto-register the `adapt` function for Promise.when()
-         */
-        protected static var _initialized : Boolean = initialize();
     }
 }
 

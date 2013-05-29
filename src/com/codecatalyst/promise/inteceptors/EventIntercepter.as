@@ -22,6 +22,8 @@
 
 package com.codecatalyst.promise.inteceptors
 {
+    import com.codecatalyst.promise.adapters.DispatcherAdapter;
+
     import flash.events.Event;
     import flash.events.IEventDispatcher;
     import flash.utils.getQualifiedClassName;
@@ -41,6 +43,12 @@ package com.codecatalyst.promise.inteceptors
         // Constructor
         // *************************************************************
 
+        /**
+         * Constructor to intercept specific events from a dispatcher
+         * and route to a Promise
+         *
+         * @see DispatcherAdapter
+         */
         public function EventIntercepter (
             source    : IEventDispatcher,
             resultType: String = null, resultKey: String = null,
@@ -52,6 +60,10 @@ package com.codecatalyst.promise.inteceptors
                 ( resultType && resultKey ) ? { type : resultType,     key : resultKey } : null,
                 ( faultType  && faultKey  ) ? { type : faultType,      key : faultKey}   : null
             )
+
+            // Since the EventIntercepter is `adapted` by DispatcherAdapter, don't forget to
+            // silently, auto-register the adapter with Promise
+            DispatcherAdapter.register();
         }
 
         // *************************************************************
