@@ -139,11 +139,12 @@ package com.codecatalyst.promise
 		/**
 		* Run (1x) the registerAdapters() global registration process
 		*/
-		private static function autoRegister():void {
+		private static function autoRegister():void
+		{
 	 		if ( !_registered ) {
-				  registerAdpaters();
-				  _registered = true;
-	 	}
+				registerAdpaters();
+				_registered = true;
+	 		}
 		}
 
 		private static var _registered : Boolean;

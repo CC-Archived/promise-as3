@@ -1,5 +1,6 @@
 package com.codecatalyst.promise.adapters
 {
+    import com.codecatalyst.promise.adapters.*;
     import com.codecatalyst.promise.Promise;
 
     /**

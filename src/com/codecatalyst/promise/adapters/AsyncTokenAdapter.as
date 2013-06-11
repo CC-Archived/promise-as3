@@ -23,7 +23,9 @@
 package com.codecatalyst.promise.adapters
 {
 	import com.codecatalyst.promise.Promise;
-	import mx.rpc.AsyncToken;
+    import com.codecatalyst.promise.inteceptors.DeferredResponder;
+
+    import mx.rpc.AsyncToken;
 
 	/**
 	 * AsyncTokenAdapter is an adapter used to enable 
@@ -46,81 +48,7 @@ package com.codecatalyst.promise.adapters
 		public static function adapt( value:* ):Promise
 		{
 			const token:AsyncToken = value as AsyncToken;
-			if ( token )
-			{
-				const responder:DeferredResponder = new DeferredResponder();
-				token.addResponder( responder );
-				return responder.promise;
-			}
-			return null;
-		}
+      return token ? new DeferredResponder( token ).promise : null;
 	}
 }
 
-import com.codecatalyst.promise.Deferred;
-import com.codecatalyst.promise.Promise;
-
-import mx.rpc.IResponder;
-import mx.rpc.events.FaultEvent;
-import mx.rpc.events.ResultEvent;
-
-/**
- * Implements the IResponder interface to delegate result and fault as 
- * resolution and rejection of a Deferred.
- *
- * @private
- */
-class DeferredResponder implements IResponder
-{
-	// ========================================
-	// Public properties
-	// ========================================
-
-	/**
-	 * Promise of the future value of this Responder.
-	 */
-	public function get promise():Promise
-	{
-		return deferred.promise;
-	}
-	
-	// ========================================
-	// Private properties
-	// ========================================
-	
-	/**
-	 * Internal Deferred for this Responder.
-	 */
-	private var deferred:Deferred;
-
-	// ========================================
-	// Constructor
-	// ========================================
-
-	function DeferredResponder()
-	{
-		this.deferred = new Deferred();
-	}
-
-	// ========================================
-	// Public methods
-	// ========================================
-
-	/**
-	 * @inheritDoc
-	 */
-	public function result( data:Object ):void
-	{
-		var value:* = ( data is ResultEvent ) ? data.result : data;
-		deferred.resolve( value );
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public function fault( info:Object ):void
-	{
-		var error:* = ( info is FaultEvent ) ? info.fault : info;
-		deferred.reject( error );
-	}
-}
