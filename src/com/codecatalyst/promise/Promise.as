@@ -122,10 +122,15 @@ package com.codecatalyst.promise
 		 * available.
 		 * 
 		 * Those callbacks can subsequently transform the value that was 
-		 * resolved or the error that was rejected. Each call to then() 
+		 * fulfilled or the error that was rejected. Each call to then() 
 		 * returns a new Promise of that transformed value; i.e., a Promise 
-		 * that is resolved with the callback return value or rejected with 
+		 * that is fulfilled with the callback return value or rejected with 
 		 * any error thrown by the callback.
+		 * 
+		 * @param onFulfilled Callback to execute to transform a fulfillment value.
+		 * @param onRejected Callback to execute to transform a rejection reason.
+		 * 
+		 * @return Promise that is fulfilled with the callback return value or rejected with any error thrown by the callback.
 		 */
 		public function then( onFulfilled:Function = null, onRejected:Function = null ):Promise
 		{

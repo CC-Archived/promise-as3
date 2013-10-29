@@ -73,8 +73,10 @@ package com.codecatalyst.promise
 		/**
 		 * Resolve this Deferred with the specified value.
 		 * 
-		 * Once a Deferred has been resolved, it is considered to be complete 
+		 * Once a Deferred has been fulfilled or rejected, it is considered to be complete 
 		 * and subsequent calls to resolve() or reject() are ignored.
+		 * 
+		 * @param value Value to resolve as either a fulfillment value or rejection reason.
 		 */
 		public function resolve( value:* ):void
 		{
@@ -86,10 +88,12 @@ package com.codecatalyst.promise
 		 * 
 		 * Once a Deferred has been rejected, it is considered to be complete
 		 * and subsequent calls to resolve() or reject() are ignored.
+		 * 
+		 * @param reason Rejection reason.
 		 */
-		public function reject( error:* ):void
+		public function reject( reason:* ):void
 		{
-			resolver.reject( error );
+			resolver.reject( reason );
 		}
 	}
 }
