@@ -22,7 +22,7 @@
 
 package com.codecatalyst.promise.adapters
 {
-	import com.codecatalyst.promise.Promise;
+	  import com.codecatalyst.promise.Promise;
     import com.codecatalyst.promise.inteceptors.DeferredResponder;
 
     import mx.rpc.AsyncToken;
@@ -49,6 +49,7 @@ package com.codecatalyst.promise.adapters
 		{
 			const token:AsyncToken = value as AsyncToken;
       return token ? new DeferredResponder( token ).promise : null;
+    }
 	}
 }
 

@@ -136,6 +136,27 @@ package com.codecatalyst.promise
 			return resolver.then( onFulfilled, onRejected );
 		}
 
+    public function done( onDone:Function ):Promise
+    {
+      var resolveHandler : Function = function( val:* ):*
+          {
+              if ( onDone != null )
+              {
+                var params : Array = onDone.length ? [ val ] : [ ];
+                onDone.apply(null, params);
+              }
+
+              return val;
+          },
+          rejectHandler : Function = function( fault:* ):void
+          {
+              resolveHandler( fault );
+              throw  fault;
+          }
+
+      return resolver.then( resolveHandler, rejectHandler );
+    }
+
 		/**
 		* Run (1x) the registerAdapters() global registration process
 		*/
