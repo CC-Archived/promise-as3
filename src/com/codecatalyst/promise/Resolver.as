@@ -171,7 +171,7 @@ package com.codecatalyst.promise
 			
 			try
 			{
-				if ( value == Promise )
+				if ( value == promise )
 				{
 					throw new TypeError( "A Promise cannot be resolved with itself." );
 				}
