@@ -153,10 +153,11 @@ One of the pitfalls of interacting with Promise-based APIs is the tendency for i
 For example:
 
 ```ActionScript
-var promise:Promise = doWork().then( function () {
-	// logic in your callback throws an error and it is interpreted as a rejection.
-	throw new Error( 'Boom!' );
-});
+promise
+	.then( function () {
+		// logic in your callback throws an error and it is interpreted as a rejection.
+		throw new Error( 'Boom!' );
+	});
 
 // The error is silently swallowed.
 ```
@@ -164,10 +165,12 @@ var promise:Promise = doWork().then( function () {
 This problem can be addressed by terminating the Promise chain with the `done()` method:
 
 ```ActionScript
-var promise:Promise = doWork().then( function () {
-	// logic in your callback throws an error and it is interpreted as a rejection.
-	throw new Error( 'Boom!' );
-}).done();
+promise
+	.then( function () {
+		// logic in your callback throws an error and it is interpreted as a rejection.
+		throw new Error( 'Boom!' );
+	})
+	.done();
 
 // The error is thrown on the next tick of the event loop.
 ```

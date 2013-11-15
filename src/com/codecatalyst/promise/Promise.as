@@ -284,19 +284,22 @@ package com.codecatalyst.promise
 		 * 
 		 * @example For example:
 		 * <listing version="3.0">
-		 * var promise:Promise = doWork().then( function () {
-		 *     // logic in your callback throws an error and it is interpreted as a rejection.
-		 *     throw new Error('Boom!');
-		 * });
+		 * promise
+		 *     .then( function () {
+		 *         // logic in your callback throws an error and it is interpreted as a rejection.
+		 *         throw new Error('Boom!');
+		 *     });
 		 * // The Error was not handled by the Promise chain and is silently swallowed.
 		 * </listing>
 		 * 
 		 * @example This problem can be addressed by terminating the Promise chain with the done() method:
 		 * <listing version="3.0">
-		 * var promise:Promise = doWork().then( function () {
-		 *     // logic in your callback throws an error and it is interpreted as a rejection.
-		 *     throw new Error('Boom!');
-		 * }).done();
+		 * promise
+		 *     .then( function () {
+		 *         // logic in your callback throws an error and it is interpreted as a rejection.
+		 *         throw new Error('Boom!');
+		 *     })
+		 *     .done();
 		 * // The Error was not handled by the Promise chain and is rethrown by done() on the next tick.
 		 * </listing>
 		 * 
