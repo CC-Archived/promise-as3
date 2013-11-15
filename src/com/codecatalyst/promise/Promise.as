@@ -51,7 +51,9 @@ package com.codecatalyst.promise
 			{
 				const promise:Promise = adapt( value ) as Promise;
 				if ( promise )
+				{
 					return promise;
+				}
 			}
 			
 			const deferred:Deferred = new Deferred();
@@ -72,7 +74,9 @@ package com.codecatalyst.promise
 		public static function registerAdapter( adapter:Function ):void
 		{
 			if ( adapters.indexOf( adapter ) == -1 )
+			{
 				adapters.push( adapter );
+			}
 		}
 
 		/**
@@ -84,7 +88,9 @@ package com.codecatalyst.promise
 		{
 			const index:int = adapters.indexOf( adapter );
 			if ( index > -1 )
+			{
 				adapters.splice( index, 1 );
+			}
 		}
 		
 		// ========================================
@@ -154,7 +160,8 @@ package com.codecatalyst.promise
 		 * 
 		 * @return Promise of the transformed future value.
 		 */
-		public function otherwise( onRejected:Function ):Promise {
+		public function otherwise( onRejected:Function ):Promise
+		{
 			return resolver.then( null, onRejected );
 		}
 
@@ -173,21 +180,27 @@ package com.codecatalyst.promise
 		 */
 		public function always( onCompleted:Function ):Promise
 		{
-			function onFulfilled( value:* ):* {
-				try {
+			function onFulfilled( value:* ):*
+			{
+				try
+				{
 					onCompleted();
 				}
-				catch ( error:Error ) {
+				catch ( error:Error )
+				{
 					scheduleRethrowError( error );
 				}
 				return value;
 			}
 			
-			function onRejected( reason:* ):* {
-				try {
+			function onRejected( reason:* ):*
+			{
+				try
+				{
 					onCompleted();
 				}
-				catch ( error:Error ) {
+				catch ( error:Error )
+				{
 					scheduleRethrowError( error );
 				}
 				throw reason;

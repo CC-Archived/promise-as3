@@ -132,10 +132,12 @@ package com.codecatalyst.promise
 		public function then( onFulfilled:Function = null, onRejected:Function = null ):Promise
 		{
 			var consequence:Consequence = new Consequence( onFulfilled, onRejected );
-			if ( completed ) {
+			if ( completed )
+			{
 				consequence.trigger( completionAction, completionValue );
 			}
-			else {
+			else
+			{
 				consequences.push( consequence );
 			}
 			
@@ -162,46 +164,59 @@ package com.codecatalyst.promise
 		 */
 		public function resolve( value:* ):void
 		{
-			if ( completed ) {
+			if ( completed )
+			{
 				return;
 			}
 			
-			try {
-				if ( value == Promise ) {
+			try
+			{
+				if ( value == Promise )
+				{
 					throw new TypeError( "A Promise cannot be resolved with itself." );
 				}
 				var thenFn:Function; // NOTE: We must only call value.then once!
-				if ( value != null && ( value is Object || value is Function ) && "then" in value && ( thenFn = value.then ) is Function ) {
+				if ( value != null && ( value is Object || value is Function ) && "then" in value && ( thenFn = value.then ) is Function )
+				{
 					var isHandled:Boolean = false;
 					var self:Resolver = this;
-					try {
+					try
+					{
 						thenFn.call( 
 							value, 
-							function ( value:* ):void {
-								if ( !isHandled ) {
+							function ( value:* ):void
+							{
+								if ( !isHandled )
+								{
 									isHandled = true;
 									self.resolve( value );
 								}
 							},
-							function ( reason:* ):void {
-								if ( !isHandled ) {
+							function ( reason:* ):void
+							{
+								if ( !isHandled )
+								{
 									isHandled = true;
 									self.reject( reason );
 								}
 							}
 						);
 					}
-					catch ( error:* ) {
-						if ( !isHandled ) {
+					catch ( error:* )
+					{
+						if ( !isHandled )
+						{
 							reject( error );
 						}
 					}
 				}
-				else {
+				else
+				{
 					complete( CompletionAction.FULFILL, value );
 				}
 			}
-			catch ( error:* ) {
+			catch ( error:* )
+			{
 				reject( error );
 			}
 		}
@@ -216,7 +231,8 @@ package com.codecatalyst.promise
 		 */
 		public function reject( reason:* ):void
 		{
-			if ( completed ) {
+			if ( completed )
+			{
 				return;
 			}
 			

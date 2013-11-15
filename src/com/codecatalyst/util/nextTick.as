@@ -85,7 +85,9 @@ class CallbackQueue
 		queuedCallbacks.push( new Callback( closure, parameters ) );
 		
 		if ( queuedCallbacks.length == 1 )
+		{
 			intervalId = setInterval( execute, 0 );
+		}
 	}
 	
 	// ========================================

@@ -110,7 +110,8 @@ package com.codecatalyst.promise
 		 */
 		public function trigger( action:String, value:* ):void
 		{
-			switch ( action ) {
+			switch ( action )
+			{
 				case CompletionAction.FULFILL:
 					propagate( value, onFulfilled, resolver.resolve );
 					break;
@@ -135,10 +136,12 @@ package com.codecatalyst.promise
 		 */
 		private function propagate( value:*, callback:Function, resolverMethod:Function ):void
 		{
-			if ( callback is Function ) {
+			if ( callback is Function )
+			{
 				nextTick( transform, [ value, callback ] );
 			}
-			else {
+			else
+			{
 				resolverMethod.call( resolver, value );
 			}
 		}
@@ -152,10 +155,12 @@ package com.codecatalyst.promise
 		 */
 		private function transform( value:*, callback:Function ):void
 		{
-			try {
+			try
+			{
 				resolver.resolve( callback.length == 0 ? callback() : callback( value ) );
 			}
-			catch ( error:* ) {
+			catch ( error:* ) 
+			{
 				resolver.reject( error );
 			}
 		}
