@@ -20,7 +20,7 @@
 // THE SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.codecatalyst.promise.adapters
+package com.codecatalyst.promise.adapter
 {
 	  import com.codecatalyst.promise.Promise;
     import com.codecatalyst.promise.inteceptors.DeferredResponder;
@@ -35,7 +35,7 @@ package com.codecatalyst.promise.adapters
 	 * <code>Promise.registerAdapter(AsyncTokenAdapter.adapt)</code>
 	 *
 	 * To unregister this adapter:
-	 * <code>Promise.removeAdapter(AsyncTokenAdapter.adapt)</code>
+	 * <code>Promise.unregisterAdapter(AsyncTokenAdapter.adapt)</code>
 	 */
 	public class AsyncTokenAdapter
 	{
