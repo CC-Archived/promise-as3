@@ -11,6 +11,8 @@ It supports foreign promises returned by callbacks as long as they support the s
 
 ## API
 
+### Creating, resolving and rejecting Promises
+
 Create a deferred:
 
 	import com.codecatalyst.promise.Deferred;
@@ -39,6 +41,8 @@ Add (optional) handlers to that promise:
 
 	promise.then( onFulfilled, onRejected );
 
+### Adapting immediate values, Promises and AsyncTokens
+
 Immediate values, foreign Promises (i.e. a Promise from another Promises/A implementation), and AsyncTokens can be adapted using the Promise.when() helper method.
 
 To adapt an immediate value:
@@ -62,6 +66,29 @@ To adapt an AsyncToken:
 	
 	var promise:Promise = Promise.when( token );
 
+### Unhandled Rejections
+
+One of the pitfalls of interacting with Promise-based APIs is the tendency for important errors to be silently swallowed unless an explicit rejection handler is specified.
+
+For example:
+
+	var promise:Promise = doWork().then( function () {
+		// logic in your callback throws an error and it is interpreted as a rejection.
+		throw new Error('Boom!');
+	});
+	
+	// The error is silently swallowed.
+
+This problem can be addressed by terminating the Promise chain with the `done()` method:
+
+	var promise:Promise = doWork().then( function () {
+		// logic in your callback throws an error and it is interpreted as a rejection.
+		throw new Error('Boom!');
+	}).done();
+	
+	// The error is thrown on the next tick of the event loop.
+
+The `done()` method ensures that any unhandled rejections are rethrown as Errors.
 
 ## Internal Anatomy
 

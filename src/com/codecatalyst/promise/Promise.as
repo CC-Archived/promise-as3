@@ -22,6 +22,8 @@
 
 package com.codecatalyst.promise
 {
+	import com.codecatalyst.util.nextTick;
+
 	/**
 	 * Promises represent a future value; i.e., a value that may not yet be available.
 	 */
@@ -135,6 +137,59 @@ package com.codecatalyst.promise
 		public function then( onFulfilled:Function = null, onRejected:Function = null ):Promise
 		{
 			return resolver.then( onFulfilled, onRejected );
+		}
+		
+		/**
+		 * Terminates a Promise chain, ensuring that unhandled rejections will 
+		 * be rethrown as Errors.
+		 * 
+		 * One of the pitfalls of interacting with Promise-based APIs is the 
+		 * tendency for important errors to be silently swallowed unless an 
+		 * explicit rejection handler is specified.
+		 * 
+		 * @example For example:
+		 * <listing version="3.0">
+		 * var promise:Promise = doWork().then( function () {
+		 *     // logic in your callback throws an error and it is interpreted as a rejection.
+		 *     throw new Error('Boom!');
+		 * });
+		 * // The Error was not handled by the Promise chain and is silently swallowed.
+		 * </listing>
+		 * 
+		 * @example Introducing the done() method ensures that unhandled rejections are rethrown as Errors:
+		 * <listing version="3.0">
+		 * var promise:Promise = doWork().then( function () {
+		 *     // logic in your callback throws an error and it is interpreted as a rejection.
+		 *     throw new Error('Boom!');
+		 * }).done();
+		 * // The Error was not handled by the Promise chain and is rethrown by done() on the next tick.
+		 * </listing>
+		 */
+		public function done():void
+		{
+			resolver.then( null, scheduleRethrowError );
+		}
+		
+		// ========================================
+		// Private methods
+		// ========================================
+		
+		/**
+		 * Schedules an Error to be rethrown in the future.
+		 * 
+		 * @param error Error to be thrown.
+		 */
+		private function scheduleRethrowError( error:* ):void {
+			nextTick( rethrowError, [ error ] );
+		}
+		
+		/**
+		 * Rethrows the specified Error, prepending the original stack trace.
+		 *  
+		 * @param error Error to be thrown.
+		 */
+		private function rethrowError( error:* ):void {
+			throw error.getStackTrace() + "\nRethrown from:";
 		}
 	}
 }
