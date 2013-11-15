@@ -11,7 +11,7 @@ It supports foreign promises returned by callbacks as long as they support the s
 
 ## API
 
-### Creating, resolving and rejecting Promises
+### Creating, Resolving and Rejecting Promises
 
 Create a deferred:
 
@@ -49,7 +49,7 @@ Add (optional) handlers to that promise:
 
 	promise.then( onFulfilled, onRejected );
 
-### Adapting immediate values, Promises and AsyncTokens
+### Adapting Immediate Values, Promises and AsyncTokens
 
 Immediate values, foreign Promises (i.e. a Promise from another Promises/A implementation), and AsyncTokens can be adapted using the Promise.when() helper method.
 
