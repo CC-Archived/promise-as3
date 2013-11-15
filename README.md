@@ -142,7 +142,7 @@ promise
 
 ### Cancellation
 
-Cancellation is a specialized form of rejection, one which can be initiated from the Promise (consumer) rather than the Deferred (producer). If a Promise is still pending, calling its `cancel()` method triggers a rejection with a CancellationError that will propagate to any Promises originating from that Promise.
+Cancellation is a specialized form of rejection, one which can be initiated from the Promise (consumer) rather than the Deferred (producer). If a Promise is still pending, calling its `cancel()` method triggers a rejection with a `CancellationError` that will propagate to any Promises originating from that Promise.
 
 **NOTE:** Cancellation only propagates to Promises that branch from the target Promise. It does not traverse back up to parent branches, as this would reject nodes from which other Promises may have branched, causing unintended side-effects.
 
@@ -212,7 +212,7 @@ Custom logger functions can be used to integrate with logging frameworks.
 
 promise-as3 includes to example custom logger functions:
 
-`TraceLogger` is a custom logger function that logs messages via trace().
+`TraceLogger` is a custom logger function that logs messages via `trace()`.
 
 To register this logger:
 
