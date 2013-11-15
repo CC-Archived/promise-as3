@@ -15,27 +15,35 @@ It supports foreign promises returned by callbacks as long as they support the s
 
 Create a deferred:
 
-	import com.codecatalyst.promise.Deferred;
+```ActionScript
+import com.codecatalyst.promise.Deferred;
+
+...
 	
-	...
-	
-	var deferred:Deferred = new Deferred();
+var deferred:Deferred = new Deferred();
+```
 
 Resolve that deferred:
-	
-	deferred.resolve( value );
+
+```ActionScript
+deferred.resolve( value );
+```
 
 Or, reject that deferred:
 
-	deferred.reject( reason );
+```ActionScript
+deferred.reject( reason );
+```
 
 Obtain the promise linked to that deferred to pass to external consumers:
 
-	import com.codecatalyst.promise.Promise;
-	
-	...
-	
-	var promise:Promise = deferred.promise;
+```ActionScript
+import com.codecatalyst.promise.Promise;
+
+...
+
+var promise:Promise = deferred.promise;
+```
 
 Add (optional) handlers to that promise:
 
@@ -47,24 +55,30 @@ Immediate values, foreign Promises (i.e. a Promise from another Promises/A imple
 
 To adapt an immediate value:
 
-	var promise:Promise = Promise.when( 123 );
+```ActionScript
+var promise:Promise = Promise.when( 123 );
+```
 
 To adapt a foreign Promise:
 
-	var promise:Promise = Promise.when( foreignPromise );
+```ActionScript
+var promise:Promise = Promise.when( foreignPromise );
+```
 
 To adapt an AsyncToken:
 
-	import com.codecatalyst.promise.adapters.AsyncTokenAdapter;
+```ActionScript
+import com.codecatalyst.promise.adapters.AsyncTokenAdapter;
 	
-	...
-	
-	// NOTE: Only need to do this once for the entire application.
-	Promise.registerAdapter( AsyncTokenAdapter.adapt );
-	
-	var token:AsyncToken = ...
-	
-	var promise:Promise = Promise.when( token );
+...
+
+// NOTE: Only need to do this once for the entire application.
+Promise.registerAdapter( AsyncTokenAdapter.adapt );
+
+var token:AsyncToken = ...
+
+var promise:Promise = Promise.when( token );
+```
 
 ### Unhandled Rejections
 
@@ -72,21 +86,25 @@ One of the pitfalls of interacting with Promise-based APIs is the tendency for i
 
 For example:
 
-	var promise:Promise = doWork().then( function () {
-		// logic in your callback throws an error and it is interpreted as a rejection.
-		throw new Error('Boom!');
-	});
-	
-	// The error is silently swallowed.
+```ActionScript
+var promise:Promise = doWork().then( function () {
+	// logic in your callback throws an error and it is interpreted as a rejection.
+	throw new Error('Boom!');
+});
+
+// The error is silently swallowed.
+```
 
 This problem can be addressed by terminating the Promise chain with the `done()` method:
 
-	var promise:Promise = doWork().then( function () {
-		// logic in your callback throws an error and it is interpreted as a rejection.
-		throw new Error('Boom!');
-	}).done();
-	
-	// The error is thrown on the next tick of the event loop.
+```ActionScript
+var promise:Promise = doWork().then( function () {
+	// logic in your callback throws an error and it is interpreted as a rejection.
+	throw new Error('Boom!');
+}).done();
+
+// The error is thrown on the next tick of the event loop.
+```
 
 The `done()` method ensures that any unhandled rejections are rethrown as Errors.
 
