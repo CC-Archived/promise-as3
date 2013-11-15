@@ -156,7 +156,7 @@ package com.codecatalyst.promise
 		 * // The Error was not handled by the Promise chain and is silently swallowed.
 		 * </listing>
 		 * 
-		 * @example Introducing the done() method ensures that unhandled rejections are rethrown as Errors:
+		 * @example This problem can be addressed by terminating the Promise chain with the done() method:
 		 * <listing version="3.0">
 		 * var promise:Promise = doWork().then( function () {
 		 *     // logic in your callback throws an error and it is interpreted as a rejection.
@@ -164,6 +164,9 @@ package com.codecatalyst.promise
 		 * }).done();
 		 * // The Error was not handled by the Promise chain and is rethrown by done() on the next tick.
 		 * </listing>
+		 * 
+		 * The done() method ensures that any unhandled rejections are rethrown 
+		 * as Errors.
 		 */
 		public function done():void
 		{
