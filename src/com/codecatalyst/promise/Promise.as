@@ -71,7 +71,8 @@ package com.codecatalyst.promise
 		 * @see com.codecatalyst.promise.logger.FlexLogger
 		 * @see com.codecatalyst.promise.logger.TraceLogger
 		 */
-		public static function log( category:String, level:int, message:String, ...parameters ):void {
+		public static function log( category:String, level:int, message:String, ...parameters ):void
+		{
 			var loggerParameters:Array = [ category, level, message ].concat( parameters );
 			for each ( var logger:Function in loggers )
 			{
@@ -274,6 +275,58 @@ package com.codecatalyst.promise
 		}
 		
 		/**
+		 * Terminates a Promise chain, ensuring that unhandled rejections will 
+		 * be rethrown as Errors.
+		 * 
+		 * One of the pitfalls of interacting with Promise-based APIs is the 
+		 * tendency for important errors to be silently swallowed unless an 
+		 * explicit rejection handler is specified.
+		 * 
+		 * @example For example:
+		 * <listing version="3.0">
+		 * var promise:Promise = doWork().then( function () {
+		 *     // logic in your callback throws an error and it is interpreted as a rejection.
+		 *     throw new Error('Boom!');
+		 * });
+		 * // The Error was not handled by the Promise chain and is silently swallowed.
+		 * </listing>
+		 * 
+		 * @example This problem can be addressed by terminating the Promise chain with the done() method:
+		 * <listing version="3.0">
+		 * var promise:Promise = doWork().then( function () {
+		 *     // logic in your callback throws an error and it is interpreted as a rejection.
+		 *     throw new Error('Boom!');
+		 * }).done();
+		 * // The Error was not handled by the Promise chain and is rethrown by done() on the next tick.
+		 * </listing>
+		 * 
+		 * The done() method ensures that any unhandled rejections are rethrown 
+		 * as Errors.
+		 */
+		public function done():void
+		{
+			resolver.then( null, scheduleRethrowError );
+		}
+		
+		/**
+		 * Cancels this Promise if it is still pending, triggering a rejection 
+		 * with a CancellationError that will propagate to any Promises 
+		 * originating from this Promise.
+		 * 
+		 * NOTE: Cancellation only propagates to Promises that branch from the 
+		 * target Promise. It does not traverse back up to parent branches, as 
+		 * this would reject nodes from which other Promises may have branched, 
+		 * causing unintended side-effects.
+		 * 
+		 * @param reason Cancellation reason.
+		 */
+		public function cancel( reason:* ):void
+		{
+			resolver.reject( new CancellationError( reason ) );
+		}
+		
+		
+		/**
 		 * Logs the resolution or rejection of this Promise with the specified
 		 * category and optional identifier. Messages are logged via all 
 		 * registered custom logger functions.
@@ -317,40 +370,6 @@ package com.codecatalyst.promise
 			}
 			
 			return resolver.then( onFulfilled, onRejected );
-		}
-		
-		/**
-		 * Terminates a Promise chain, ensuring that unhandled rejections will 
-		 * be rethrown as Errors.
-		 * 
-		 * One of the pitfalls of interacting with Promise-based APIs is the 
-		 * tendency for important errors to be silently swallowed unless an 
-		 * explicit rejection handler is specified.
-		 * 
-		 * @example For example:
-		 * <listing version="3.0">
-		 * var promise:Promise = doWork().then( function () {
-		 *     // logic in your callback throws an error and it is interpreted as a rejection.
-		 *     throw new Error('Boom!');
-		 * });
-		 * // The Error was not handled by the Promise chain and is silently swallowed.
-		 * </listing>
-		 * 
-		 * @example This problem can be addressed by terminating the Promise chain with the done() method:
-		 * <listing version="3.0">
-		 * var promise:Promise = doWork().then( function () {
-		 *     // logic in your callback throws an error and it is interpreted as a rejection.
-		 *     throw new Error('Boom!');
-		 * }).done();
-		 * // The Error was not handled by the Promise chain and is rethrown by done() on the next tick.
-		 * </listing>
-		 * 
-		 * The done() method ensures that any unhandled rejections are rethrown 
-		 * as Errors.
-		 */
-		public function done():void
-		{
-			resolver.then( null, scheduleRethrowError );
 		}
 		
 		// ========================================
