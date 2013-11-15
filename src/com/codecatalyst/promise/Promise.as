@@ -22,6 +22,7 @@
 
 package com.codecatalyst.promise
 {
+	import com.codecatalyst.promise.logger.LogLevel;
 	import com.codecatalyst.util.nextTick;
 
 	/**
@@ -43,7 +44,7 @@ package com.codecatalyst.promise
 		 * 
 		 * @see #registerAdapter()
 		 * @see #unregisterAdapter()
-		 * @see com.codecatalyst.promise.adapters.AsyncTokenAdapter
+		 * @see com.codecatalyst.promise.adapter.AsyncTokenAdapter
 		 */
 		public static function when( value:* ):Promise
 		{
@@ -60,6 +61,23 @@ package com.codecatalyst.promise
 			deferred.resolve( value );
 			return deferred.promise;
 		}
+		
+		/**
+		 * Logs a message with the specified category, log level and optional 
+		 * parameters via all registered custom logger functions.
+		 * 
+		 * @see #registerLogger()
+		 * @see #unregisterLogger()
+		 * @see com.codecatalyst.promise.logger.FlexLogger
+		 * @see com.codecatalyst.promise.logger.TraceLogger
+		 */
+		public static function log( category:String, level:int, message:String, ...parameters ):void {
+			var loggerParameters:Array = [ category, level, message ].concat( parameters );
+			for each ( var logger:Function in loggers )
+			{
+				logger.apply( logger, loggerParameters );
+			}
+		}
 
 		/**
 		 * Registers a custom adapter function capable of adapting values
@@ -68,6 +86,13 @@ package com.codecatalyst.promise
 		 * A custom adapter function is called with a candidate value and
 		 * should return either a Promise that adapts that value or null if the
 		 * adapter cannot adapt that value.
+		 * 
+		 * @example A custom adapter should have the following function signature:
+		 * <listing version="3.0">
+		 * function function adapt( value:* ):Promise {
+		 *    // ...
+		 * }
+		 * </listing>
 		 * 
 		 * @see #unregisterAdapter()
 		 */
@@ -93,14 +118,54 @@ package com.codecatalyst.promise
 			}
 		}
 		
+		/**
+		 * Registers a custom logger function capable of logging messages
+		 * with a specified category, log level, and optional parameters.
+		 * 
+		 * @example A custom logger should have the following function signature:
+		 * <listing version="3.0">
+		 * function log( category:String, level:int, message:String, ...parameters ):void {
+		 *    // ...
+		 * }
+		 * </listing>
+		 * 
+		 * @see #unregisterLogger()
+		 */
+		public static function registerLogger( logger:Function ):void
+		{
+			if ( loggers.indexOf( logger ) == -1 )
+			{
+				loggers.push( logger );
+			}
+		}
+		
+		/**
+		 * Unregisters a custom logger function.
+		 * 
+		 * @see #registerLogger()
+		 */
+		public static function unregisterLogger( logger:Function ):void
+		{
+			const index:int = loggers.indexOf( logger );
+			if ( index > -1 )
+			{
+				loggers.splice( index, 1 );
+			}
+		}
+		
 		// ========================================
-		// Private static methods
+		// Private static properties
 		// ========================================
 		
 		/**
 		 * Array of registered adapter functions.
 		 */
 		private static const adapters:Array = [];
+		
+		/**
+		 * Array of registered logger functions.
+		 */
+		private static const loggers:Array = [];
 		
 		// ========================================
 		// Private properties
@@ -144,7 +209,6 @@ package com.codecatalyst.promise
 		{
 			return resolver.then( onFulfilled, onRejected );
 		}
-		
 		
 		/**
 		 * Attaches an <code>onRejected</code> callback that will be 
@@ -205,6 +269,52 @@ package com.codecatalyst.promise
 				}
 				throw reason;
 			}			
+			
+			return resolver.then( onFulfilled, onRejected );
+		}
+		
+		/**
+		 * Logs the resolution or rejection of this Promise with the specified
+		 * category and optional identifier. Messages are logged via all 
+		 * registered custom logger functions.
+		 * 
+		 * @param category Logging category, typically a class name or package.
+		 * @param identifier An optional identifier to incorporate into the resulting log entry.
+		 * 
+		 * @return A new "pass-through" Promise that is resolved with the original value or rejected with the original reason.
+		 * 
+		 * @see #registerLogger()
+		 * @see #unregisterLogger()
+		 * @see com.codecatalyst.promise.logger.FlexLogger
+		 * @see com.codecatalyst.promise.logger.TraceLogger
+		 */
+		public function log( category:String, identifier:String = null ):Promise
+		{
+			function onFulfilled( value:* ):*
+			{
+				try
+				{
+					Promise.log( category, LogLevel.DEBUG, ( identifier || "Promise" ) + " resolved with value: " + value );
+				}
+				catch ( error:Error )
+				{
+					scheduleRethrowError( error );
+				}
+				return value;
+			}
+			
+			function onRejected( reason:* ):*
+			{
+				try
+				{
+					Promise.log( category, LogLevel.ERROR, ( identifier || "Promise" ) + " rejected with reason: " + reason );
+				}
+				catch ( error:Error )
+				{
+					scheduleRethrowError( error );
+				}
+				throw reason;
+			}
 			
 			return resolver.then( onFulfilled, onRejected );
 		}
