@@ -121,12 +121,12 @@ promise.then( null, onRejected );
 
 Because `then()` returns a new Promise, these statements can be chained:
 
-```
+```ActionScript
 promise
 	.then( parseData )
 	.then( populateUI )
 	.otherwise( recover );
-```ActionScript
+```
 
 Add an `onCompleted` callback that is executed regardless of whether the Promise is resolved or rejected:
 
