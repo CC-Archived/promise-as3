@@ -119,7 +119,7 @@ package com.codecatalyst.promise
 		// ========================================
 		
 		/**
-		 * Used to specify <code>onFulfilled</code> and <code>onRejected</code>
+		 * Attaches <code>onFulfilled</code> and <code>onRejected</code>
 		 * callbacks that will be notified when the future value becomes 
 		 * available.
 		 * 
@@ -136,6 +136,63 @@ package com.codecatalyst.promise
 		 */
 		public function then( onFulfilled:Function = null, onRejected:Function = null ):Promise
 		{
+			return resolver.then( onFulfilled, onRejected );
+		}
+		
+		
+		/**
+		 * Attaches an <code>onRejected</code> callback that will be 
+		 * notified if this Promise is rejected.
+		 * 
+		 * The callback can subsequently transform the reason that was 
+		 * rejected. Each call to otherwise() returns a new Promise of that 
+		 * transformed value; i.e., a Promise that is resolved with the 
+		 * original resolved value, or resolved with the callback return value
+		 * or rejected with any error thrown by the callback.
+		 *
+		 * @param onRejected Callback to execute to transform a rejection reason.
+		 * 
+		 * @return Promise of the transformed future value.
+		 */
+		public function otherwise( onRejected:Function ):Promise {
+			return resolver.then( null, onRejected );
+		}
+
+		/**
+		 * Attaches an <code>onCompleted</code> callback that will be 
+		 * notified when the future value becomes available.
+		 * 
+		 * Similar to "finally" in "try..catch..finally".
+		 * 
+		 * NOTE: The specified callback does not affect the resulting Promise's
+		 * outcome; any return value is ignored and any Error is rethrown.
+		 * 
+		 * @param onCompleted Callback to execute when the Promise is resolved or rejected.
+		 * 
+		 * @return A new "pass-through" Promise that is resolved with the original value or rejected with the original reason.
+		 */
+		public function always( onCompleted:Function ):Promise
+		{
+			function onFulfilled( value:* ):* {
+				try {
+					onCompleted();
+				}
+				catch ( error:Error ) {
+					scheduleRethrowError( error );
+				}
+				return value;
+			}
+			
+			function onRejected( reason:* ):* {
+				try {
+					onCompleted();
+				}
+				catch ( error:Error ) {
+					scheduleRethrowError( error );
+				}
+				throw reason;
+			}			
+			
 			return resolver.then( onFulfilled, onRejected );
 		}
 		
@@ -182,7 +239,8 @@ package com.codecatalyst.promise
 		 * 
 		 * @param error Error to be thrown.
 		 */
-		private function scheduleRethrowError( error:* ):void {
+		private function scheduleRethrowError( error:* ):void
+		{
 			nextTick( rethrowError, [ error ] );
 		}
 		
@@ -191,7 +249,8 @@ package com.codecatalyst.promise
 		 *  
 		 * @param error Error to be thrown.
 		 */
-		private function rethrowError( error:* ):void {
+		private function rethrowError( error:* ):void
+		{
 			throw error.getStackTrace() + "\nRethrown from:";
 		}
 	}

@@ -108,7 +108,8 @@ package com.codecatalyst.promise
 		 * @param action Completion action (i.e. CompletionAction.FULFILL or CompletionAction.REJECT).
 		 * @param value Fulfillment value or rejection reason.
 		 */
-		public function trigger( action:String, value:* ):void {
+		public function trigger( action:String, value:* ):void
+		{
 			switch ( action ) {
 				case CompletionAction.FULFILL:
 					propagate( value, onFulfilled, resolver.resolve );
@@ -132,7 +133,8 @@ package com.codecatalyst.promise
 		 * @param callback (Optional) callback to use to transform the value. 
 		 * @param resolverMethod Resolver method to call to propagate the value, if no callback was specified.
 		 */
-		private function propagate( value:*, callback:Function, resolverMethod:Function ):void {
+		private function propagate( value:*, callback:Function, resolverMethod:Function ):void
+		{
 			if ( callback is Function ) {
 				nextTick( transform, [ value, callback ] );
 			}
@@ -148,7 +150,8 @@ package com.codecatalyst.promise
 		 * @param value Value to transform.
 		 * @param callback Callback to execute to transform the value.
 		 */
-		private function transform( value:*, callback:Function ):void {
+		private function transform( value:*, callback:Function ):void
+		{
 			try {
 				resolver.resolve( callback.length == 0 ? callback() : callback( value ) );
 			}
