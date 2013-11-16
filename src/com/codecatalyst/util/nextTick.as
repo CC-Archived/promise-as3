@@ -57,7 +57,12 @@ class CallbackQueue
 	/**
 	 * Queued Callback(s).
 	 */
-	protected const queuedCallbacks:Array = [];
+	protected const queuedCallbacks:Array = new Array(1e4);
+
+	/**
+	 * Count for # of callbacks still pending in the queue
+	 */
+	protected var queuedCallbackCount : uint = 0;
 
 	/**
 	 * Interval identifier.
@@ -82,9 +87,9 @@ class CallbackQueue
 	 */
 	public function schedule( closure:Function, parameters:Array = null ):void
 	{
-		queuedCallbacks.push( new Callback( closure, parameters ) );
+		queuedCallbacks[ queuedCallbackCount++ ] = new Callback( closure, parameters );
 		
-		if ( queuedCallbacks.length == 1 )
+		if ( queuedCallbackCount == 1 )
 		{
 			intervalId = setInterval( execute, 0 );
 		}
@@ -99,14 +104,19 @@ class CallbackQueue
 	 */
 	protected function execute():void
 	{
-		clearInterval( intervalId );
-		
-		for each ( var queuedCallback:Callback in queuedCallbacks )
-		{
-			queuedCallback.execute();
-		}
-		
-		queuedCallbacks.length = 0;
+			var index : uint = 0;
+
+			clearInterval( intervalId );
+
+			while( index < queuedCallbackCount )
+			{
+				(queuedCallbacks[ index ] as Callback).execute();
+				queuedCallbacks[ index ] = null;
+
+				index += 1;
+			}
+
+			queuedCallbackCount = 0;
 	}
 }
 

@@ -20,63 +20,82 @@
 // THE SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.codecatalyst.promise.adapters
+package com.codecatalyst.promise.adapter
 {
     import com.codecatalyst.promise.Promise;
-    import com.codecatalyst.promise.adapters.URLLoaderAdapter;
-
-    import flash.net.URLLoader;
+    import com.codecatalyst.promise.inteceptors.EventIntercepter;
 
     /**
-     * URLLoaderAdapter is an adapter used to enable
-     * <code>Promise.when()</code> to convert UrlLoader operations to Promises.
+     * DispatcherAdapter is an adapter used to enable
+     * <code>Promise.when()</code> to convert any EventDispatcher activity to Promise activity.
+     *
+     * NOTE: To properly determine which events will `resolve()` versus which events will `reject()`
+     *       the <code>EventIntercepter</code> is required to wrap the eventDispatcher instance
+     *
+     *       An additional benefit of the intercepter is that specific data can be auto-extracted from
+     *       the events and will be used within the resolve/reject processes.
      *
      * To register this adapter:
-     * <code>Promise.registerAdapter(URLLoaderAdapter.adapt)</code>
+     * <code>Promise.registerAdapter(DispatcherAdapter.adapt)</code>
      * To unregister this adapter:
-     * <code>Promise.removeAdapter(URLLoaderAdapter.adapt)</code>
+     * <code>Promise.removeAdapter(DispatcherAdapter.adapt)</code>
      *
      * Usage example:
      * <code>
-     *     function loadDocument( url : String ):Promise
-     *     {
-     *          var loader = new URLLoader();
-     *              loader.load( new URLRequest( url ) );
      *
-     *         return Promise.when( loader );
+     *     // The EventIntercepter listens for specific events from authenticator
+     *     // and extracts data based on
+     *     // the specified keys; e.g. `session` and `details`
+     *
+     *     function loginUser( userName:String, password:String ):Promise
+     *     {
+     *          var authenticator : Authenticator = new Authenticator;
+     *
+     *              authenticator.loginUser( userName, password );
+     *
+     *         return Promise.when( new EventIntercepter (
+     *                  authenticator,
+     *                  AuthenticationEvent.AUTHENTICATED, 'session',
+     *                  AuthenticationEvent.NOT_ALLOWED,   'details'
+     *         ));
      *     }
      *
-     *     loadDocument(
      *
-     *       "https://raw.github.com/ThomasBurleson/promise-as3/master/README.md"
+     *     loginUser(
+     *          'ThomasB',
+     *          "superSecretPassword"
+     *     )
+     *     .then(
      *
-     *     ).then(
+     *         function onLoginOK( session:Object ):void {
+     *             // Save the session information and continue login process
+     *         },
      *
-     *       function onImageLoaded( docReadMe:String ):void {
-     *           // Do something with this ReadMe.md data...
-     *       },
-     *
-     *       function onLoadError( errorID:String ):void {
-     *          // Report the error loading the ReadMe.md document
-     *       }
+     *         function onLoginFailed( fault:Object  ):void {
+     *            // Report the login failure and request another attempt
+     *         }
      *
      *     );
      *
      *</code>
      *
      */
-    public class URLLoaderAdapter
+    public class DispatcherAdapter
     {
+        // ******************************************************
+        // Public Static `adapt()` feature
+        // ******************************************************
+
         /**
-         *
-         * @param value
+         * Adapt the EventIntercepter to a promise...
+         * @param value EventIntercepter
          * @return
          */
         public static function adapt( value:* ):Promise
         {
-            const loader:URLLoader = value as URLLoader;
+            var interceptor : * = value as EventIntercepter;
 
-            return loader ? new DeferredLoader( loader ).promise : null;
+            return interceptor ? new DeferredDispatcher( interceptor ).promise : null;
         }
 
     }
@@ -84,18 +103,14 @@ package com.codecatalyst.promise.adapters
 
 import com.codecatalyst.promise.Deferred;
 import com.codecatalyst.promise.Promise;
-
-import flash.events.Event;
-import flash.events.IOErrorEvent;
-import flash.events.SecurityErrorEvent;
-import flash.net.URLLoader;
+import com.codecatalyst.promise.inteceptors.EventIntercepter;
 
 /**
  * Wrapper class for URLLoader that internally manages listeners and
  * resolve/reject actions on the publish Deferred/Promise instance
  *
  */
-class DeferredLoader {
+class DeferredDispatcher {
 
     /**
      * Promise of the future value of this Responder.
@@ -109,10 +124,10 @@ class DeferredLoader {
     // Constructor
     // ******************************************************
 
-    public function DeferredLoader( loader: URLLoader )
+    public function DeferredDispatcher( intercepter : EventIntercepter )
     {
-        _loader   = loader;
-        _deferred = new Deferred();
+        _intercepter = intercepter;
+        _deferred    = new Deferred();
 
         attachListeners();
     }
@@ -123,21 +138,20 @@ class DeferredLoader {
 
     protected function attachListeners( active:Boolean=true ):void
     {
-        if ( !_loader ) return;
+        if ( !_intercepter ) return;
 
         if ( active )
         {
-            _loader.addEventListener( Event.COMPLETE,                       onLoadComplete );
-            _loader.addEventListener( IOErrorEvent.IO_ERROR,                onLoadError    );
-            _loader.addEventListener( SecurityErrorEvent.SECURITY_ERROR,    onLoadError    );
+            _intercepter.addCallbacks(
+                onResultHander,
+                onFaultHandler,
+                this
+            );
 
         } else {
 
-            _loader.removeEventListener( Event.COMPLETE,                    onLoadComplete );
-            _loader.removeEventListener( IOErrorEvent.IO_ERROR,             onLoadError    );
-            _loader.removeEventListener( SecurityErrorEvent.SECURITY_ERROR, onLoadError    );
-
-            _loader = null;
+            _intercepter.release( );
+            _intercepter = null;
         }
     }
 
@@ -150,12 +164,12 @@ class DeferredLoader {
      * Load has completed. Resolve with the `data` and cleanup.
      *
      */
-    protected function onLoadComplete(event:Event):void
+    protected function onResultHander( result:* ):void
     {
         try {
 
             // Extract the `data` and resolve the deferred
-            _deferred.resolve( event.target.data );
+            _deferred.resolve( result );
 
         } finally {
 
@@ -168,12 +182,12 @@ class DeferredLoader {
      * A Security or IO error event occurred. Reject the deferred
      * and cleanup.
      */
-    protected function onLoadError(event:Object):void
+    protected function onFaultHandler( fault:* ):void
     {
         try {
 
             // Extract the `errorID` and reject the deferred
-            _deferred.reject( event["errorID"] );
+            _deferred.reject( fault );
 
         } finally {
 
@@ -187,6 +201,6 @@ class DeferredLoader {
     // Protected Attributes
     // ****************************************************
 
-    protected var _loader   : URLLoader;
-    protected var _deferred : Deferred;
+    protected var _intercepter  : EventIntercepter;
+    protected var _deferred     : Deferred;
 }

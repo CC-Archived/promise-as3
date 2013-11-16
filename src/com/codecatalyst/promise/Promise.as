@@ -22,10 +22,11 @@
 
 package com.codecatalyst.promise
 {
-	import com.codecatalyst.promise.logger.LogLevel;
-	import com.codecatalyst.util.nextTick;
+    import com.codecatalyst.promise.adapter.registerAdpaters;
+    import com.codecatalyst.promise.logger.LogLevel;
+    import com.codecatalyst.util.nextTick;
 
-	/**
+    /**
 	 * Promises represent a future value; i.e., a value that may not yet be available.
 	 */
 	public class Promise
@@ -48,6 +49,8 @@ package com.codecatalyst.promise
 		 */
 		public static function when( value:* ):Promise
 		{
+      autoRegister();
+
 			for each ( var adapt:Function in adapters )
 			{
 				const promise:Promise = adapt( value ) as Promise;
@@ -395,5 +398,16 @@ package com.codecatalyst.promise
 		{
 			throw error.getStackTrace() + "\nRethrown from:";
 		}
+
+    private static function autoRegister():void
+		{
+	 		if ( !_registered )
+      {
+				  registerAdpaters();
+				  _registered = true;
+	 	  }
+		}
+
+		private static var _registered : Boolean;
 	}
 }
