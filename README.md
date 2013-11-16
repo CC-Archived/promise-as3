@@ -177,6 +177,8 @@ promise
 
 The `done()` method ensures that any unhandled rejections are rethrown as Errors.
 
+**NOTE:** The `done()` method should only be used by a consumer of a Promise-returning API at the terminating node of a Promise chain. A Promise-returning API should never use `done()` internally for a Promise it intends to return to a consumer; otherwise, that Promise's rejection will be thrown as an RTE and will not actually be propagated to consumers.
+
 ### Logging
 
 The `log()` method provides a simple way to programmatically introduce logging within a Promise chain.
