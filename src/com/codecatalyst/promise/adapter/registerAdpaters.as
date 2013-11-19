@@ -9,7 +9,6 @@ package com.codecatalyst.promise.adapter
      */
     public function registerAdpaters():void {
 
-        Promise.registerAdapter( AsyncTokenAdapter.adapt );
         Promise.registerAdapter( DispatcherAdapter.adapt );
         Promise.registerAdapter( URLLoaderAdapter.adapt  );
     }

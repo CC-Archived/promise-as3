@@ -20,7 +20,7 @@
 // THE SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.codecatalyst.promise.adapter
+package com.codecatalyst.promise.rpc
 {
 	  import com.codecatalyst.promise.Promise;
     import com.codecatalyst.promise.inteceptors.DeferredResponder;
@@ -28,9 +28,9 @@ package com.codecatalyst.promise.adapter
     import mx.rpc.AsyncToken;
 
 	/**
-	 * AsyncTokenAdapter is an adapter used to enable 
+	 * AsyncTokenAdapter is an adapter used to enable
 	 * <code>Promise.when()</code> to convert AsyncTokens to Promises.
-	 * 
+	 *
 	 * To register this adapter:
 	 * <code>Promise.registerAdapter(AsyncTokenAdapter.adapt)</code>
 	 *
@@ -41,7 +41,7 @@ package com.codecatalyst.promise.adapter
 	{
 		/**
 		 * Adapts an AsyncToken as a Promise.
-		 * 
+		 *
 		 * @param value A candidate value that might be an AsyncToken.
 		 * @return A Promise adapting a AsyncToken or null
 		 */

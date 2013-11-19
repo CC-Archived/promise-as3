@@ -22,7 +22,6 @@
 
 package com.codecatalyst.promise.inteceptors
 {
-    import com.codecatalyst.promise.adapters.DispatcherAdapter;
 
     import flash.events.Event;
     import flash.events.IEventDispatcher;
@@ -67,7 +66,7 @@ package com.codecatalyst.promise.inteceptors
      *
      *</code>
      *
-     * This class is actually intended to be used with Promise.when() and the DispatcherAdapter.
+     * This class is actually intended to be used with Promise.all() and the globally registered DispatcherAdapter.
      * The resulting code usage is significantly more intuitive and useful:
      *
      * <code>
@@ -81,7 +80,7 @@ package com.codecatalyst.promise.inteceptors
      *
      *              authenticator.loginUser( userName, password );
      *
-     *         return Promise.when( new EventIntercepter (
+     *         return Promise.all( new EventIntercepter (
      *                  authenticator,
      *                  AuthenticationEvent.AUTHENTICATED, 'session',
      *                  AuthenticationEvent.NOT_ALLOWED,   'details'

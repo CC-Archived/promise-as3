@@ -45,7 +45,7 @@ package com.codecatalyst.promise
 		 * 
 		 * @see #registerAdapter()
 		 * @see #unregisterAdapter()
-		 * @see com.codecatalyst.promise.adapter.AsyncTokenAdapter
+		 * @see AsyncTokenAdapter
 		 */
 		public static function when( value:* ):Promise
 		{
