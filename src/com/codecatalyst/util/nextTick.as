@@ -24,6 +24,9 @@ package com.codecatalyst.util
 {
 	/**
 	 * Executes the specified callback function on the next turn of the event loop.
+	 * 
+	 * @param callback Callback function.
+	 * @param parameters Optional parameters to pass to the callback function.
 	 */
 	public function nextTick( callback:Function, parameters:Array = null ):void
 	{
@@ -79,10 +82,13 @@ class CallbackQueue
 	
 	/**
 	 * Add a callback to the end of the queue, to be executed on the next turn of the event loop.
+	 * 
+	 * @param callback Callback function.
+	 * @param parameters Optional parameters to pass to the callback function.
 	 */
-	public function schedule( closure:Function, parameters:Array = null ):void
+	public function schedule( callback:Function, parameters:Array = null ):void
 	{
-		queuedCallbacks.push( new Callback( closure, parameters ) );
+		queuedCallbacks.push( new Callback( callback, parameters ) );
 		
 		if ( queuedCallbacks.length == 1 )
 		{
