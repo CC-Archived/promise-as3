@@ -175,14 +175,14 @@ package com.codecatalyst.promise
 				{
 					throw new TypeError( "A Promise cannot be resolved with itself." );
 				}
-				var thenFn:Function; // NOTE: We must only call value.then once!
-				if ( value != null && ( value is Object || value is Function ) && "then" in value && ( thenFn = value.then ) is Function )
+				var thenFunction:Function; // NOTE: We must only call value.then once!
+				if ( value != null && ( value is Object || value is Function ) && "then" in value && ( thenFunction = value.then ) is Function )
 				{
 					var isHandled:Boolean = false;
 					var self:Resolver = this;
 					try
 					{
-						thenFn.call( 
+						thenFunction.call( 
 							value, 
 							function ( value:* ):void
 							{

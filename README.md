@@ -153,10 +153,11 @@ One of the pitfalls of interacting with Promise-based APIs is the tendency for i
 For example:
 
 ```ActionScript
-var promise:Promise = doWork().then( function () {
-	// logic in your callback throws an error and it is interpreted as a rejection.
-	throw new Error( 'Boom!' );
-});
+promise
+	.then( function () {
+		// logic in your callback throws an error and it is interpreted as a rejection.
+		throw new Error( 'Boom!' );
+	});
 
 // The error is silently swallowed.
 ```
@@ -164,15 +165,19 @@ var promise:Promise = doWork().then( function () {
 This problem can be addressed by terminating the Promise chain with the `done()` method:
 
 ```ActionScript
-var promise:Promise = doWork().then( function () {
-	// logic in your callback throws an error and it is interpreted as a rejection.
-	throw new Error( 'Boom!' );
-}).done();
+promise
+	.then( function () {
+		// logic in your callback throws an error and it is interpreted as a rejection.
+		throw new Error( 'Boom!' );
+	})
+	.done();
 
 // The error is thrown on the next tick of the event loop.
 ```
 
 The `done()` method ensures that any unhandled rejections are rethrown as Errors.
+
+**NOTE:** The `done()` method should only be used by a consumer of a Promise-returning API at the terminating node of a Promise chain. A Promise-returning API should never use `done()` internally for a Promise it intends to return to a consumer; otherwise, that Promise's rejection will be thrown as an RTE and will not actually be propagated to consumers.
 
 ### Logging
 

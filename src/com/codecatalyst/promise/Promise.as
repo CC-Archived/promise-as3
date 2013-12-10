@@ -22,11 +22,15 @@
 
 package com.codecatalyst.promise
 {
-    import com.codecatalyst.promise.adapter.registerAdpaters;
-    import com.codecatalyst.promise.logger.LogLevel;
-    import com.codecatalyst.util.nextTick;
+	import com.codecatalyst.promise.logger.LogLevel;
+	import com.codecatalyst.util.nextTick;
+	import com.codecatalyst.util.optionally;
+	import com.codecatalyst.util.spread;
+	
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
 
-    /**
+	/**
 	 * Promises represent a future value; i.e., a value that may not yet be available.
 	 */
 	public class Promise
@@ -43,14 +47,15 @@ package com.codecatalyst.promise
 		 * Additionally, the specified value can be adapted into a Promise
 		 * through the use of custom adapters.
 		 * 
+		 * @param value An immediate value, a Promise, a foreign Promise or adaptable value.
+		 * @return Promise of the specified value.
+		 * 
 		 * @see #registerAdapter()
 		 * @see #unregisterAdapter()
-		 * @see AsyncTokenAdapter
+		 * @see com.codecatalyst.promise.adapter.AsyncTokenAdapter
 		 */
 		public static function when( value:* ):Promise
 		{
-      autoRegister();
-
 			for each ( var adapt:Function in adapters )
 			{
 				const promise:Promise = adapt( value ) as Promise;
@@ -66,9 +71,397 @@ package com.codecatalyst.promise
 		}
 		
 		/**
+		 * Determines whether the specified value is a thenable, i.e. an Object
+		 * or Function that exposes a then() method and may therefore be an 
+		 * third-party untrusted Promise, based on the Promises/A 
+		 * specification feature test.
+		 * 
+		 * @param value A potential thenable.
+		 * @return Boolean indicating whether the specified value was a thenable.
+		 */
+		public static function isThenable( value:* ):Boolean
+		{
+			return ( value != null && ( value is Object || value is Function ) && "then" in value && value.then is Function );
+		}
+		
+		/**
+		 * Returns a new Promise that will only fulfill once all the specified
+		 * Promises and/or values have been fulfilled, and will reject if any
+		 * of the specified Promises is rejected. The resolution value will be 
+		 * an Array containing the fulfilled value of each of the Promises or 
+		 * values.
+		 * 
+		 * @param promisesOrValues An Array of values or Promises, or a Promise of an Array of values or Promises.
+		 * @returns Promise of an Array of the fulfilled values.
+		 */
+		public static function all( promisesOrValues:* ):Promise
+		{
+			if ( ! ( promisesOrValues is Array || Promise.isThenable( promisesOrValues ) ) )
+			{
+				throw new Error( "Invalid parameter: expected an Array or Promise of an Array." );
+			}
+			
+			function process( promisesOrValues:Array ):Promise
+			{
+				var remainingToResolve:uint = promisesOrValues.length;
+				var results:Array = new Array( promisesOrValues.length );
+				
+				var deferred:Deferred = new Deferred();
+				
+				if ( remainingToResolve > 0 )
+				{
+					function resolve( item:*, index:uint ):Promise
+					{
+						function fulfill( value:* ):void
+						{
+							results[ index ] = value;
+							if ( --remainingToResolve == 0 )
+							{
+								deferred.resolve( results )
+							}
+						}
+						
+						return Promise.when( item ).then( fulfill, deferred.reject );
+					}
+					
+					for ( var index:uint = 0; index < promisesOrValues.length; index++ )
+					{
+						if ( index in promisesOrValues )
+						{
+							resolve( promisesOrValues[ index ], index );
+						}
+						else
+						{
+							remainingToResolve--;
+						}
+					}
+				}
+				else
+				{
+					deferred.resolve( results );
+				}
+				
+				return deferred.promise;
+			}
+			
+			return Promise.when( promisesOrValues ).then( process );
+		}
+		
+		/**
+		 * Initiates a competitive race, returning a new Promise that will 
+		 * fulfill when any one of the specified Promises or values is 
+		 * fulfilled, or will only reject once all of the Promises have
+		 * been rejected.
+		 * 
+		 * @param promisesOrValues An Array of values or Promises, or a Promise of an Array of values or Promises.
+		 * @return Promise of the first resolved value.
+		 */
+		public static function any( promisesOrValues:* ):Promise
+		{
+			if ( ! ( promisesOrValues is Array || Promise.isThenable( promisesOrValues ) ) )
+			{
+				throw new Error( "Invalid parameter: expected an Array or Promise of an Array." )
+			}
+			
+			function extract( array:Array ):*
+			{
+				return array[ 0 ];
+			}
+			
+			function transform( reason:* ):void
+			{
+				if ( reason is Error && reason.message == "Too few Promises were resolved." )
+				{
+					throw new Error( "No Promises were resolved." );
+				}
+				throw reason;
+			}
+
+			return Promise.some( promisesOrValues, 1 ).then( extract, transform );
+		}
+		
+		/**
+		 * Initiates a competitive race, returning a new Promise that will 
+		 * fulfill when the expected number of Promises and/or values have
+		 * been fulfilled, or will reject when it becomes impossible for the
+		 * expected number to fulfill.
+		 * 
+		 * @param promisesOrValues An Array of values or Promises, or a Promise of an Array of values or Promises.
+		 * @param howMany The expected number of fulfilled values.
+		 * @return Promise of the expected number of fulfilled values.
+		 */
+		public static function some( promisesOrValues:*, howMany:uint ):Promise
+		{
+			if ( ! ( promisesOrValues is Array || Promise.isThenable( promisesOrValues ) ) )
+			{
+				throw new Error( "Invalid parameter: expected an Array or Promise of an Array." )
+			}
+			
+			function process( promisesOrValues:Array ):Promise
+			{
+				var values:Array = [];
+				var remainingToResolve:uint = howMany;
+				var remainingToReject:uint = ( promisesOrValues.length - remainingToResolve ) + 1;
+				
+				var deferred:Deferred = new Deferred();
+				
+				if ( promisesOrValues.length < howMany )
+				{
+					deferred.reject( new Error( "Too few Promises were resolved." ) );
+				}
+				else
+				{
+					function onResolve( value:* ):*
+					{
+						values.push( value );
+						remainingToResolve--;
+						if ( remainingToResolve == 0 )
+						{
+							deferred.resolve( values );
+						}
+						return value;
+					}
+					
+					function onReject( reason:* ):*
+					{
+						remainingToReject--;
+						if ( remainingToReject == 0 )
+						{
+							deferred.reject( new Error( "Too few Promises were resolved." ) )
+						}
+						throw reason;
+					}
+					
+					for ( var index:uint = 0; index < promisesOrValues.length; index++ )
+					{
+						if ( index in promisesOrValues )
+						{
+							Promise.when( promisesOrValues[ index ] ).then( onResolve, onReject );
+						}
+					}
+				}
+				
+				return deferred.promise;
+			}
+			
+			return Promise.when( promisesOrValues ).then( process );
+		}
+		
+		/**
+		 * Returns a new Promise that will automatically resolve with the 
+		 * specified Promise or value after the specified delay 
+		 * (in milliseconds).
+		 *
+		 * @param promiseOrValue A Promise or value.
+		 * @param milliseconds Delay duration (in milliseconds).
+		 * @return Promise of the specified Promise or value that will resolve after the specified delay.
+		 */
+		public static function delay( promiseOrValue:*, milliseconds:Number ):Promise
+		{
+			var deferred:Deferred = new Deferred();
+			
+			function timerCompleteHandler():void
+			{
+				timer.removeEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
+				
+				deferred.resolve( promiseOrValue );
+			}
+			
+			var timer:Timer = new Timer( Math.max( milliseconds, 0 ), 1 );
+			timer.addEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
+			
+			timer.start(); 
+			
+			return deferred.promise;
+		}
+		
+		/**
+		 * Returns a new Promise that will automatically reject after the 
+		 * specified timeout (in milliseconds) if the specified promise has 
+		 * not fulfilled or rejected.
+		 * 
+		 * @param promiseOrValue A Promise or value.
+		 * @param milliseconds Timeout duration (in milliseconds).
+		 * @return Promise of the specified Promise or value that enforces the specified timeout.
+		 */
+		public static function timeout( promiseOrValue:*, milliseconds:Number ):Promise
+		{
+			var deferred:Deferred = new Deferred();
+			
+			function timerCompleteHandler():void
+			{
+				timer.removeEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
+				
+				deferred.reject( new Error( "Promise timed out." ) );
+			}
+			
+			var timer:Timer = new Timer( Math.max( milliseconds, 0 ), 1 );
+			timer.addEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
+			
+			Promise.when( promiseOrValue ).then( deferred.resolve, deferred.reject );
+			
+			return deferred.promise;
+		}
+		
+		/**
+		 * Traditional map function that allows input to contain Promises and/or values.
+		 * 
+		 * @param promisesOrValues An Array of values or Promises, or a Promise of an Array of values or Promises.
+		 * @param mapFunction Function to call to transform each resolved value in the Array.
+		 * @return Promise of an Array of mapped values.
+		 */
+		public static function map( promisesOrValues:*, mapFunction:Function ):Promise
+		{
+			if ( ! ( promisesOrValues is Array || Promise.isThenable( promisesOrValues ) ) )
+			{
+				throw new Error( "Invalid parameter: expected an Array or Promise of an Array." )
+			}
+			if ( ! ( mapFunction is Function ) )
+			{
+				throw new Error( "Invalid parameter: expected a function." )
+			}
+			
+			function process( promisesOrValues:Array ):Promise
+			{
+				var remainingToResolve:uint = promisesOrValues.length;
+				var results:Array = new Array( promisesOrValues.length );
+				
+				var deferred:Deferred = new Deferred();
+				
+				if ( remainingToResolve > 0 )
+				{
+					function resolve( item:*, index:uint ):Promise
+					{
+						function transform( value:* ):*
+						{
+							return optionally( mapFunction, [ value, index, results ] );
+						}
+						
+						function fulfill( value:* ):void
+						{
+							results[ index ] = value;
+							if ( --remainingToResolve == 0 )
+							{
+								deferred.resolve( results )
+							}
+						}
+						
+						return Promise.when( item ).then( transform ).then( fulfill, deferred.reject );
+					}
+					
+					for ( var index:uint = 0; index < promisesOrValues.length; index++ )
+					{
+						if ( index in promisesOrValues )
+						{
+							resolve( promisesOrValues[ index ], index );
+						}
+						else
+						{
+							remainingToResolve--;
+						}
+					}
+				}
+				else
+				{
+					deferred.resolve( results );
+				}
+				
+				return deferred.promise;
+			}
+			
+			return Promise.when( promisesOrValues ).then( process );
+		}
+		
+		/**
+		 * Traditional reduce function that allows input to contain Promises and/or values.
+		 * 
+		 * @param promisesOrValues An Array of values or Promises, or a Promise of an Array of values or Promises.
+		 * @param reduceFn Function to call to transform each successive item in the Array into the final reduced value.
+		 * @param initialValue Initial Promise or value.
+		 * @return Promise of the reduced value.
+		 */
+		public static function reduce( promisesOrValues:*, reduceFunction:Function, ...rest ):Promise
+		{
+			if ( ! ( promisesOrValues is Array || Promise.isThenable( promisesOrValues ) ) )
+			{
+				throw new Error( "Invalid parameter: expected an Array or Promise of an Array." );
+			}
+			if ( ! ( reduceFunction is Function ) )
+			{
+				throw new Error( "Invalid parameter: expected a function." );
+			}
+			
+			function reduceArray( array:Array, reduceFunction:Function, ...rest ):*
+			{
+				var index:uint = 0;
+				var length:uint = array.length;
+				var reduced:* = null;
+				
+				// If no initialValue, use first item of Array and adjust index to start at second item
+				if ( rest.length == 0 ) {
+					for ( index = 0; index < length; index++ )
+					{
+						if ( index in array )
+						{
+							reduced = array[ index ];
+							index++;
+							break;
+						}
+					}
+				}
+				else
+				{
+					reduced = rest[ 0 ];
+				}
+				
+				while ( index < length )
+				{
+					if ( index in array )
+					{
+						reduced = reduceFunction( reduced, array[ index ], index, array );
+						index++
+					}
+				}
+				
+				return reduced;
+			}
+			
+			function process( promisesOrValues:Array ):Promise
+			{
+				// Wrap the reduce function with one that handles promises and then delegates to it.
+				function reduceFnWrapper( previousValueOrPromise:*, currentValueOrPromise:*, currentIndex:uint, array:Array ):Promise
+				{
+					function execute( previousValue:*, currentValue:* ):*
+					{
+						return optionally( reduceFunction, [ previousValue, currentValue, currentIndex, array ] );
+					}
+					
+					return Promise.all( [ previousValueOrPromise, currentValueOrPromise ] ).then( spread( execute ) );
+				}
+				
+				if ( rest.length > 0 )
+				{
+					var initialValue:* = rest[ 0 ];
+					return reduceArray( promisesOrValues, reduceFnWrapper, initialValue );
+				}
+				else
+				{
+					return reduceArray( promisesOrValues, reduceFnWrapper );
+				}
+			}
+			
+			return Promise.when( promisesOrValues ).then( process );
+		}
+		
+		/**
 		 * Logs a message with the specified category, log level and optional 
 		 * parameters via all registered custom logger functions.
 		 * 
+		 * @param category Category
+		 * @param level Log level
+		 * @param message Message
+		 * @param parameters Optional message parameters
+		 *
 		 * @see #registerLogger()
 		 * @see #unregisterLogger()
 		 * @see com.codecatalyst.promise.logger.FlexLogger
@@ -98,6 +491,8 @@ package com.codecatalyst.promise
 		 * }
 		 * </listing>
 		 * 
+		 * @param adapter Adapter function.
+		 * 
 		 * @see #unregisterAdapter()
 		 */
 		public static function registerAdapter( adapter:Function ):void
@@ -110,6 +505,8 @@ package com.codecatalyst.promise
 
 		/**
 		 * Unregisters a custom adapter function.
+		 * 
+		 * @param adapter Previously registered adapter function.
 		 * 
 		 * @see #registerAdapter()
 		 */
@@ -133,6 +530,8 @@ package com.codecatalyst.promise
 		 * }
 		 * </listing>
 		 * 
+		 * @param adapter Custom logger function.
+		 * 
 		 * @see #unregisterLogger()
 		 */
 		public static function registerLogger( logger:Function ):void
@@ -145,6 +544,8 @@ package com.codecatalyst.promise
 		
 		/**
 		 * Unregisters a custom logger function.
+		 * 
+		 * @param adapter Previously registered custom logger function.
 		 * 
 		 * @see #registerLogger()
 		 */
@@ -287,19 +688,22 @@ package com.codecatalyst.promise
 		 * 
 		 * @example For example:
 		 * <listing version="3.0">
-		 * var promise:Promise = doWork().then( function () {
-		 *     // logic in your callback throws an error and it is interpreted as a rejection.
-		 *     throw new Error('Boom!');
-		 * });
+		 * promise
+		 *     .then( function () {
+		 *         // logic in your callback throws an error and it is interpreted as a rejection.
+		 *         throw new Error("Boom!");
+		 *     });
 		 * // The Error was not handled by the Promise chain and is silently swallowed.
 		 * </listing>
 		 * 
 		 * @example This problem can be addressed by terminating the Promise chain with the done() method:
 		 * <listing version="3.0">
-		 * var promise:Promise = doWork().then( function () {
-		 *     // logic in your callback throws an error and it is interpreted as a rejection.
-		 *     throw new Error('Boom!');
-		 * }).done();
+		 * promise
+		 *     .then( function () {
+		 *         // logic in your callback throws an error and it is interpreted as a rejection.
+		 *         throw new Error("Boom!");
+		 *     })
+		 *     .done();
 		 * // The Error was not handled by the Promise chain and is rethrown by done() on the next tick.
 		 * </listing>
 		 * 
@@ -396,18 +800,14 @@ package com.codecatalyst.promise
 		 */
 		private function rethrowError( error:* ):void
 		{
-			throw error.getStackTrace() + "\nRethrown from:";
+			if ( error is Error )
+			{
+				throw error.getStackTrace() + "\nRethrown from:";
+			}
+			else
+			{
+				throw error;
+			}
 		}
-
-    private static function autoRegister():void
-		{
-	 		if ( !_registered )
-      {
-				  registerAdpaters();
-				  _registered = true;
-	 	  }
-		}
-
-		private static var _registered : Boolean;
 	}
 }

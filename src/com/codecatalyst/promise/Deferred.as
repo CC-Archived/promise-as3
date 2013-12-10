@@ -35,6 +35,40 @@ package com.codecatalyst.promise
 	public class Deferred
 	{
 		// ========================================
+		// Public static methods
+		// ========================================
+		
+		/**
+		 * Convenience method that returns a new Promise resolved with the specified value.
+		 *
+ 		 * @param value Value to resolve as either a fulfillment value or rejection reason.
+		 * @return Resolved Promise.
+ 		 */
+		public static function resolve( value:* ):Promise
+		{
+			var deferred:Deferred = new Deferred();
+			
+			deferred.resolve( value );
+			
+			return deferred.promise;
+		}
+		
+		/**
+		 * Convenience method that returns a new Promise rejected with the specified reason.
+		 * 
+		 * @param reason Rejection reason.
+		 * @return Rejected Promise.
+		 */
+		public static function reject( reason:* ):Promise
+		{
+			var deferred:Deferred = new Deferred();
+			
+			deferred.reject( reason );
+			
+			return deferred.promise;
+		}
+		
+		// ========================================
 		// Public properties
 		// ========================================
 		

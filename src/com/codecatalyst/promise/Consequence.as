@@ -23,6 +23,7 @@
 package com.codecatalyst.promise
 {
 	import com.codecatalyst.util.nextTick;
+	import com.codecatalyst.util.optionally;
 
 	/**
 	 * Consequences are used internally by a Resolver to capture and notify 
@@ -157,7 +158,7 @@ package com.codecatalyst.promise
 		{
 			try
 			{
-				resolver.resolve( callback.length == 0 ? callback() : callback( value ) );
+				resolver.resolve( optionally( callback, [ value ] ) );
 			}
 			catch ( error:* ) 
 			{

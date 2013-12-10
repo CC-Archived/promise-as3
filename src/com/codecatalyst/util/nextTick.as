@@ -24,6 +24,9 @@ package com.codecatalyst.util
 {
 	/**
 	 * Executes the specified callback function on the next turn of the event loop.
+	 * 
+	 * @param callback Callback function.
+	 * @param parameters Optional parameters to pass to the callback function.
 	 */
 	public function nextTick( callback:Function, parameters:Array = null ):void
 	{
@@ -57,12 +60,7 @@ class CallbackQueue
 	/**
 	 * Queued Callback(s).
 	 */
-	protected const queuedCallbacks:Array = new Array(1e4);
-
-	/**
-	 * Count for # of callbacks still pending in the queue
-	 */
-	protected var queuedCallbackCount : uint = 0;
+	protected const queuedCallbacks:Array = [];
 
 	/**
 	 * Interval identifier.
@@ -84,12 +82,15 @@ class CallbackQueue
 	
 	/**
 	 * Add a callback to the end of the queue, to be executed on the next turn of the event loop.
+	 * 
+	 * @param callback Callback function.
+	 * @param parameters Optional parameters to pass to the callback function.
 	 */
-	public function schedule( closure:Function, parameters:Array = null ):void
+	public function schedule( callback:Function, parameters:Array = null ):void
 	{
-		queuedCallbacks[ queuedCallbackCount++ ] = new Callback( closure, parameters );
+		queuedCallbacks.push( new Callback( callback, parameters ) );
 		
-		if ( queuedCallbackCount == 1 )
+		if ( queuedCallbacks.length == 1 )
 		{
 			intervalId = setInterval( execute, 0 );
 		}
@@ -104,19 +105,14 @@ class CallbackQueue
 	 */
 	protected function execute():void
 	{
-			var index : uint = 0;
-
-			clearInterval( intervalId );
-
-			while( index < queuedCallbackCount )
-			{
-				(queuedCallbacks[ index ] as Callback).execute();
-				queuedCallbacks[ index ] = null;
-
-				index += 1;
-			}
-
-			queuedCallbackCount = 0;
+		clearInterval( intervalId );
+		
+		for each ( var queuedCallback:Callback in queuedCallbacks )
+		{
+			queuedCallback.execute();
+		}
+		
+		queuedCallbacks.length = 0;
 	}
 }
 
