@@ -1,0 +1,70 @@
+<!--
+   Suggested Usage:
+      ant clean build
+   
+   The goal of this build is compile the SWC library and generate ASDoc documentation.
+-->
+<project name="Promise AS3 SWC Library" basedir="." default="build">
+	
+	<!-- Properties -->
+	
+	<property environment="env" />
+	
+	<property file="${basedir}/build.properties" />
+	
+	<property name="src.loc" location="${basedir}/src" />
+    <property name="src-flex.loc" location="${basedir}/src" />
+	<property name="lib.loc" location="${basedir}/lib" />
+	
+	<property name="dist.loc" location="${basedir}/dist" />
+	<property name="bin.loc" location="${dist.loc}/bin-debug" />
+
+	<!-- SDK Tool Configuration -->
+	
+	<property name="FLEX_HOME" location="${env.FLEX_HOME}" />
+	<taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar" />
+	
+	<!-- Targets -->
+	
+	<target name="clean" description="Remove artifacts in build directory from previous builds.">
+		<delete dir="${dist.loc}" />
+	</target>
+	
+	<target name="init" description="Initialize build directory.">
+		<echo message="Building ${ant.project.name} version: ${build.version}"/>
+		
+		<mkdir dir="${dist.loc}" />
+		<mkdir dir="${bin.loc}" />
+	</target>
+	
+	<target name="compile" depends="init" description="Compile SWC library.">
+		<echo message="FLEX_HOME is set to: ${env.FLEX_HOME}"/>
+		
+		<!-- Compile SWC -->
+		<compc output="${bin.loc}/${build.fileName}.swc">
+			<source-path path-element="${src.loc}" />
+            <source-path path-element="${src-flex.loc}" />
+
+			<include-sources dir="${src.loc}" includes="**/*.as" />
+            <include-sources dir="${src-flex.loc}" includes="**/*.as" />
+
+			<library-path dir="${lib.loc}" append="true">
+				<include name="*.swc" />
+			</library-path>
+			
+			<!-- Configure the flex framework libraries as external link dependencies -->
+			<external-library-path dir="${FLEX_HOME}/frameworks" append="true">
+				<include name="libs" />
+				<include name="locale/{locale}" />
+				<include name="libs/mx" />
+				<include name="libs/player" />
+			</external-library-path>
+			
+			<!-- Sets java.awt.headless=true so font compilation works in headless environments -->
+			<headless-server>true</headless-server>
+		</compc>
+	</target>
+	
+	<target name="build" depends="compile" description="Build the library." />
+	
+</project>

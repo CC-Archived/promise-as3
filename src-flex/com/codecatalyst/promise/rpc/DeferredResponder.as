@@ -19,7 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
-package com.codecatalyst.promise.inteceptors
+package com.codecatalyst.promise.rpc
 {
     import com.codecatalyst.promise.Deferred;
     import com.codecatalyst.promise.Promise;

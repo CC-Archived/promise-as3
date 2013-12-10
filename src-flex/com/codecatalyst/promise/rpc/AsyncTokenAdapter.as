@@ -23,7 +23,6 @@
 package com.codecatalyst.promise.rpc
 {
 	  import com.codecatalyst.promise.Promise;
-    import com.codecatalyst.promise.inteceptors.DeferredResponder;
 
     import mx.rpc.AsyncToken;
 
