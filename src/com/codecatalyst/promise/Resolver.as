@@ -22,8 +22,6 @@
 
 package com.codecatalyst.promise
 {
-	import com.codecatalyst.util.nextTick;
-
 	/**
 	 * Resolvers are used internally by Deferreds to create, resolve and reject 
 	 * Promises, and to propagate fulfillment and rejection.
