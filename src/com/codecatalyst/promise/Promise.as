@@ -562,6 +562,37 @@ package com.codecatalyst.promise
 		}
 		
 		// ========================================
+		// Private static methods
+		// ========================================
+		
+		/**
+		 * Schedules an Error to be rethrown in the future.
+		 * 
+		 * @param error Error to be thrown.
+		 */
+		private static function scheduleRethrowError( error:* ):void
+		{
+			nextTick( rethrowError, [ error ] );
+		}
+		
+		/**
+		 * Rethrows the specified Error, prepending the original stack trace.
+		 *  
+		 * @param error Error to be thrown.
+		 */
+		private static function rethrowError( error:* ):void
+		{
+			if ( error is Error )
+			{
+				throw error.getStackTrace() + "\nRethrown from:";
+			}
+			else
+			{
+				throw error;
+			}
+		}
+		
+		// ========================================
 		// Private static properties
 		// ========================================
 		
@@ -779,37 +810,6 @@ package com.codecatalyst.promise
 			}
 			
 			return resolver.then( onFulfilled, onRejected );
-		}
-		
-		// ========================================
-		// Private methods
-		// ========================================
-		
-		/**
-		 * Schedules an Error to be rethrown in the future.
-		 * 
-		 * @param error Error to be thrown.
-		 */
-		private function scheduleRethrowError( error:* ):void
-		{
-			nextTick( rethrowError, [ error ] );
-		}
-		
-		/**
-		 * Rethrows the specified Error, prepending the original stack trace.
-		 *  
-		 * @param error Error to be thrown.
-		 */
-		private function rethrowError( error:* ):void
-		{
-			if ( error is Error )
-			{
-				throw error.getStackTrace() + "\nRethrown from:";
-			}
-			else
-			{
-				throw error;
-			}
 		}
 	}
 }
