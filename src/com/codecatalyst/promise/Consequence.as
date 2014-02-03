@@ -22,7 +22,6 @@
 
 package com.codecatalyst.promise
 {
-	import com.codecatalyst.util.nextTick;
 	import com.codecatalyst.util.optionally;
 
 	/**
@@ -139,7 +138,7 @@ package com.codecatalyst.promise
 		{
 			if ( callback is Function )
 			{
-				nextTick( transform, [ value, callback ] );
+				schedule( transform, [ value, callback ] );
 			}
 			else
 			{
@@ -165,5 +164,153 @@ package com.codecatalyst.promise
 				resolver.reject( error );
 			}
 		}
+		
+		/**
+		 * Schedules the specified callback function to be executed on
+		 * the next turn of the event loop.
+		 * 
+		 * @param callback Callback function.
+		 * @param parameters Optional parameters to pass to the callback function.
+		 */
+		private function schedule( callback:Function, parameters:Array = null ):void
+		{
+			CallbackQueue.instance.schedule( callback, parameters );
+		}
+	}
+}
+
+import flash.utils.clearInterval;
+import flash.utils.setInterval;
+
+/**
+ * Used to queue callbacks for execution on the next turn of the event loop (using a single Array instance and timer).
+ * 
+ * @private
+ */
+class CallbackQueue
+{
+	// ========================================
+	// Public properties
+	// ========================================
+	
+	/**
+	 * Singleton instance accessor.
+	 */
+	public static const instance:CallbackQueue = new CallbackQueue();
+	
+	// ========================================
+	// Protected properties
+	// ========================================
+	
+	/**
+	 * Queued Callback(s).
+	 */
+	protected const queuedCallbacks:Array = new Array(1e4);
+	
+	/**
+	 * Interval identifier.
+	 */
+	protected var intervalId:int = 0;
+	
+	/**
+	 * # of pending callbacks.
+	 */
+	protected var queuedCallbackCount:uint = 0;
+	
+	// ========================================
+	// Constructor
+	// ========================================
+	
+	public function CallbackQueue()
+	{
+		super();
+	}
+	
+	// ========================================
+	// Public methods
+	// ========================================
+	
+	/**
+	 * Add a callback to the end of the queue, to be executed on the next turn of the event loop.
+	 * 
+	 * @param callback Callback function.
+	 * @param parameters Optional parameters to pass to the callback function.
+	 */
+	public function schedule( callback:Function, parameters:Array = null ):void
+	{
+		queuedCallbacks[ queuedCallbackCount++ ] = new Callback( callback, parameters );
+		
+		if ( queuedCallbackCount == 1 )
+		{
+			intervalId = setInterval( execute, 0 );
+		}
+	}
+	
+	// ========================================
+	// Protected methods
+	// ========================================
+	
+	/**
+	 * Execute any queued callbacks and clear the queue.
+	 */
+	protected function execute():void
+	{
+		clearInterval( intervalId );
+		
+		var index:uint = 0;
+		while ( index < queuedCallbackCount )
+		{
+			(queuedCallbacks[ index ] as Callback).execute();
+			queuedCallbacks[ index ] = null;
+			index++;
+		}
+		
+		queuedCallbackCount = 0;
+	}
+}
+
+/**
+ * Used to capture a callback closure, along with optional parameters.
+ * 
+ * @private
+ */
+class Callback
+{
+	// ========================================
+	// Protected properties
+	// ========================================
+	
+	/**
+	 * Callback closure.
+	 */
+	protected var closure:Function;
+	
+	/**
+	 * Callback parameters.
+	 */
+	protected var parameters:Array;
+	
+	// ========================================
+	// Constructor
+	// ========================================
+	
+	public function Callback( closure:Function, parameters:Array = null )
+	{
+		super();
+		
+		this.closure = closure;
+		this.parameters = parameters;
+	}
+	
+	// ========================================
+	// Public methods
+	// ========================================
+	
+	/**
+	 * Execute this callback.
+	 */
+	public function execute():void
+	{
+		closure.apply( null, parameters );
 	}
 }

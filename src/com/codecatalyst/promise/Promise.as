@@ -112,13 +112,14 @@ package com.codecatalyst.promise
 				{
 					function resolve( item:*, index:uint ):Promise
 					{
-						function fulfill( value:* ):void
+						function fulfill( value:* ):*
 						{
 							results[ index ] = value;
 							if ( --remainingToResolve == 0 )
 							{
 								deferred.resolve( results )
 							}
+							return value;
 						}
 						
 						return Promise.when( item ).then( fulfill, deferred.reject );
@@ -213,7 +214,9 @@ package com.codecatalyst.promise
 				{
 					function onResolve( value:* ):*
 					{
-						values.push( value );
+						if ( remainingToResolve > 0 ) {
+							values.push( value );
+						}
 						remainingToResolve--;
 						if ( remainingToResolve == 0 )
 						{
@@ -559,6 +562,37 @@ package com.codecatalyst.promise
 		}
 		
 		// ========================================
+		// Private static methods
+		// ========================================
+		
+		/**
+		 * Schedules an Error to be rethrown in the future.
+		 * 
+		 * @param error Error to be thrown.
+		 */
+		private static function scheduleRethrowError( error:* ):void
+		{
+			nextTick( rethrowError, [ error ] );
+		}
+		
+		/**
+		 * Rethrows the specified Error, prepending the original stack trace.
+		 *  
+		 * @param error Error to be thrown.
+		 */
+		private static function rethrowError( error:* ):void
+		{
+			if ( error is Error )
+			{
+				throw error.getStackTrace() + "\nRethrown from:";
+			}
+			else
+			{
+				throw error;
+			}
+		}
+		
+		// ========================================
 		// Private static properties
 		// ========================================
 		
@@ -595,9 +629,8 @@ package com.codecatalyst.promise
 		// ========================================
 		
 		/**
-		 * Attaches <code>onFulfilled</code> and <code>onRejected</code>
-		 * callbacks that will be notified when the future value becomes 
-		 * available.
+		 * Attaches onFulfilled and onRejected callbacks that will be
+		 * notified when the future value becomes available.
 		 * 
 		 * Those callbacks can subsequently transform the value that was 
 		 * fulfilled or the error that was rejected. Each call to then() 
@@ -616,8 +649,8 @@ package com.codecatalyst.promise
 		}
 		
 		/**
-		 * Attaches an <code>onRejected</code> callback that will be 
-		 * notified if this Promise is rejected.
+		 * Attaches an onRejected callback that will be notified if this
+		 * Promise is rejected.
 		 * 
 		 * The callback can subsequently transform the reason that was 
 		 * rejected. Each call to otherwise() returns a new Promise of that 
@@ -635,8 +668,8 @@ package com.codecatalyst.promise
 		}
 
 		/**
-		 * Attaches an <code>onCompleted</code> callback that will be 
-		 * notified when the future value becomes available.
+		 * Attaches an onCompleted callback that will be notified when this
+		 * Promise is completed.
 		 * 
 		 * Similar to "finally" in "try..catch..finally".
 		 * 
@@ -777,37 +810,6 @@ package com.codecatalyst.promise
 			}
 			
 			return resolver.then( onFulfilled, onRejected );
-		}
-		
-		// ========================================
-		// Private methods
-		// ========================================
-		
-		/**
-		 * Schedules an Error to be rethrown in the future.
-		 * 
-		 * @param error Error to be thrown.
-		 */
-		private function scheduleRethrowError( error:* ):void
-		{
-			nextTick( rethrowError, [ error ] );
-		}
-		
-		/**
-		 * Rethrows the specified Error, prepending the original stack trace.
-		 *  
-		 * @param error Error to be thrown.
-		 */
-		private function rethrowError( error:* ):void
-		{
-			if ( error is Error )
-			{
-				throw error.getStackTrace() + "\nRethrown from:";
-			}
-			else
-			{
-				throw error;
-			}
 		}
 	}
 }

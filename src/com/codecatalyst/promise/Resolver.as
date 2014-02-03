@@ -22,8 +22,6 @@
 
 package com.codecatalyst.promise
 {
-	import com.codecatalyst.util.nextTick;
-
 	/**
 	 * Resolvers are used internally by Deferreds to create, resolve and reject 
 	 * Promises, and to propagate fulfillment and rejection.
@@ -114,9 +112,8 @@ package com.codecatalyst.promise
 		// ========================================
 		
 		/**
-		 * Used to specify <code>onFulfilled</code> and <code>onRejected</code>
-		 * callbacks that will be notified when the future value becomes 
-		 * available.
+		 * Used to specify onFulfilled and onRejected callbacks that will be
+		 * notified when the future value becomes available.
 		 * 
 		 * Those callbacks can subsequently transform the value that was 
 		 * fulfilled or the error that was rejected. Each call to then() 
