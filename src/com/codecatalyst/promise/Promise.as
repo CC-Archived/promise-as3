@@ -300,6 +300,7 @@ package com.codecatalyst.promise
 			
 			var timer:Timer = new Timer( Math.max( milliseconds, 0 ), 1 );
 			timer.addEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
+			timer.start();
 			
 			Promise.when( promiseOrValue ).then( deferred.resolve, deferred.reject );
 			
