@@ -8,3 +8,7 @@ target
 .sourceMate
 FlexUnitApplication.mxml
 .FlexUnitSettings
+
+/as3-promises.iml
+
+/promiseA-spec.iml

@@ -92,12 +92,64 @@ package com.codecatalyst.promise
 		// ========================================
 		// Constructor
 		// ========================================
-		
-		public function Deferred()
+
+      /**
+       * Constructor supports immediate callback
+       *
+       * @param callback
+       * @param scope
+       */
+		public function Deferred( callback:Function = null, scope:Object = null )
 		{
 			super();
 			
 			this.resolver = new Resolver();
+
+			notifyCallback( callback,	scope );
+
+		}
+
+		/**
+		*	 notifyCallback() provides support for special
+    *  constructor function handlers.
+    *
+		*		 @code
+		*				return new Deferred( function( dfd:Deferred ):void {
+		*
+		*			          function onLoad_userDetails( details:Object ):void
+		*								{
+		*										dfd.resolve( details);
+		*										releaseListeners();
+		*								}
+		*
+		*								function onFailed_userDetails( fault:Object ):void
+		*								{
+		*										dfd.reject( fault );
+		*										releaseListeners();
+		*								}
+		*
+		*								function releaseListeners():void
+		*								{
+		*										userService.removeEventListener(`userDetailsLoaded`,onLoad_userDetails);
+		*										userService.removeEventListener(`serviceError`,     onFailed_userDetails);
+		*								}
+		*
+		*								userService.getUserDetails();
+		*
+		*								userService.addEventListener(`userDetailsLoaded`,onLoad_userDetails);
+		*								userService.addEventListener(`serviceError`,onFailed_userDetails);
+		*
+		*				}).promise;
+		*		
+		*		 @param callback
+		*		 @param scope
+		*/
+		protected function notifyCallback( callback:Function = null, scope:Object = null ):void
+		{
+			if ( (callback != null)	&& (callback.length == 1) )
+			{
+				callback.apply( scope, [ this ] );
+			}
 		}
 		
 		// ========================================

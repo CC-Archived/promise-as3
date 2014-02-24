@@ -18,7 +18,7 @@ package com.codecatalyst.promise.adapters
 	import org.flexunit.async.Async;
 	import org.hamcrest.assertThat;
 	import org.hamcrest.object.equalTo;
-	import com.codecatalyst.promise.adapter.AsyncTokenAdapter;
+	import AsyncTokenAdapter;
 
 	use namespace mx_internal;
 
