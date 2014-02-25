@@ -22,6 +22,7 @@
 
 package com.codecatalyst.promise
 {
+    import com.codecatalyst.promise.adapter.registerAdpaters;
 	import com.codecatalyst.promise.logger.LogLevel;
 	import com.codecatalyst.util.nextTick;
 	import com.codecatalyst.util.optionally;
@@ -56,6 +57,8 @@ package com.codecatalyst.promise
 		 */
 		public static function when( value:* ):Promise
 		{
+			autoRegister();
+
 			for each ( var adapt:Function in adapters )
 			{
 				const promise:Promise = adapt( value ) as Promise;
@@ -271,9 +274,9 @@ package com.codecatalyst.promise
 			}
 			
 			var timer:Timer = new Timer( Math.max( milliseconds, 0 ), 1 );
-			timer.addEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
-			
-			timer.start(); 
+
+					timer.addEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
+					timer.start();
 			
 			return deferred.promise;
 		}
@@ -299,8 +302,10 @@ package com.codecatalyst.promise
 			}
 			
 			var timer:Timer = new Timer( Math.max( milliseconds, 0 ), 1 );
-			timer.addEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
-			
+
+					timer.addEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
+					timer.start();
+
 			Promise.when( promiseOrValue ).then( deferred.resolve, deferred.reject );
 			
 			return deferred.promise;
@@ -811,5 +816,16 @@ package com.codecatalyst.promise
 			
 			return resolver.then( onFulfilled, onRejected );
 		}
+
+		private static function autoRegister():void
+		{
+			if ( !_registered )
+		 	{
+		 		registerAdpaters();
+				_registered = true;
+		 	}
+		}
+
+		private static var _registered : Boolean;
 	}
 }
