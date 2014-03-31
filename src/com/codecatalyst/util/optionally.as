@@ -24,7 +24,7 @@ package com.codecatalyst.util
 {
 	/**
 	 * Executes the specified function, passing as many of the specified 
-	 * paramaters as the function can accept.
+	 * parameters as the function can accept.
 	 * 
 	 * @param targetFunction Function to execute.
 	 * @param parameters Parameters to potentially pass to the function.
@@ -34,7 +34,15 @@ package com.codecatalyst.util
 	 */
 	public function optionally( targetFunction:Function, parameters:Array, requiredParameters:int = 0 ):*
 	{
-		var parameterCount:int = Math.max( Math.min( targetFunction.length, parameters.length ), requiredParameters );
-		return targetFunction.apply( null, parameters.slice( 0, parameterCount ) );
+		try {
+			return targetFunction.apply( null, parameters );
+		} catch (e:ArgumentError) {
+			var parameterCount:int = Math.max( targetFunction.length, requiredParameters );
+			if ( parameterCount < parameters.length ) {
+				// only retry if we actually get less parameters:
+				return targetFunction.apply( null, parameters.slice( 0, parameterCount ) );
+			}
+			throw e;
+		}
 	}
 }
