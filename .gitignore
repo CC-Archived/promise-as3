@@ -8,3 +8,12 @@ target
 .sourceMate
 FlexUnitApplication.mxml
 .FlexUnitSettings
+
+# IntelliJ project files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Maven output
+target/
