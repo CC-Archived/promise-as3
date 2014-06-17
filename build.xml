@@ -70,7 +70,7 @@
             >
         <attribute name="outputDir" default="${dist.loc}"/>
         <attribute name="flavour"/>
-        <attribute name="outputFileName" default="${build.artifact.name}-@{flavour}"/>
+        <attribute name="outputFileName" default="${build.fileName}-@{flavour}"/>
 
         <element name="compcNested" optional="true"/>
         <sequential>
