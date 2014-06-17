@@ -1,0 +1,93 @@
+<!--
+   Suggested Usage:
+      ant clean build
+   
+   The goal of this build is compile the SWC library and generate ASDoc documentation.
+-->
+<project name="Promise AS3 SWC Library" basedir="." default="build">
+
+    <!-- Properties -->
+
+    <property environment="env"/>
+
+    <property file="${basedir}/build.properties"/>
+
+    <property name="project.loc" location="${basedir}/promise"/>
+    <property name="src.loc" location="${project.loc}/src"/>
+    <property name="src-flex.loc" location="${project.loc}/src-flex"/>
+    <property name="lib.loc" location="${basedir}/lib"/>
+
+    <property name="build.loc" location="${basedir}/build"/>
+    <property name="dist.loc" location="${build.loc}/out"/>
+
+    <!-- SDK Tool Configuration -->
+
+    <property name="FLEX_HOME" location="${env.FLEX_HOME}"/>
+    <taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar"/>
+
+    <!-- Targets -->
+
+    <target name="clean" description="Remove artifacts in build directory from previous builds.">
+        <delete dir="${dist.loc}"/>
+    </target>
+
+    <target name="init" description="Initialize build directory.">
+        <echo message="FLEX_HOME is set to: ${FLEX_HOME}"/>
+        <echo message="Building ${ant.project.name} "/>
+        <echo message="Target directory: ${dist.loc}"/>
+
+        <mkdir dir="${dist.loc}"/>
+    </target>
+
+    <target name="compileAs3" depends="init"
+            description="Compile SWC library for usage in actionscript only projects.">
+        <compileSwc flavour="as3-only"/>
+    </target>
+    <target name="compileFlex" depends="init"
+            description="Compile SWC library for usage in projects depending on Flex.">
+        <compileSwc flavour="flex">
+            <compcNested>
+                <source-path path-element="${src-flex.loc}"/>
+                <include-sources dir="${src-flex.loc}" includes="**/*.as"/>
+            </compcNested>
+        </compileSwc>
+    </target>
+
+    <target name="compile" depends="compileAs3,compileFlex" description="Compile all kind of SWC librarys."/>
+
+    <target name="archiveSources" depends="init" description="create an archive containing the sources.">
+        <zip destfile="${dist.loc}/${build.artifact.name}-src.zip">
+            <zipfileset dir="promise/src" prefix="src"/>
+            <zipfileset dir="promise/src-flex" prefix="src-flex"/>
+            <zipfileset file="README.md"/>
+        </zip>
+    </target>
+
+    <target name="build" depends="clean,compile,archiveSources" description="Build the library."/>
+
+    <macrodef name="compileSwc"
+            description=""
+            >
+        <attribute name="outputDir" default="${dist.loc}"/>
+        <attribute name="flavour"/>
+        <attribute name="outputFileName" default="${build.artifact.name}-@{flavour}"/>
+
+        <element name="compcNested" optional="true"/>
+        <sequential>
+            <echo message="compile '@{outputFileName}.swc' using 'build/@{flavour}.config.xml'"/>
+            <mkdir dir="@{outputDir}/@{outputFileName}"/>
+            <compc output="@{outputDir}/@{outputFileName}.swc"
+                   link-report="@{outputDir}/@{outputFileName}/link.report.xml"
+                   dump-config="@{outputDir}/@{outputFileName}/dump.config.xml"
+                    >
+                <load-config filename="build/@{flavour}.config.xml"/>
+                <source-path path-element="${src.loc}"/>
+                <include-sources dir="${src.loc}" includes="**/*.as"/>
+                <compcNested/>
+                <!-- Sets java.awt.headless=true so font compilation works in headless environments -->
+                <headless-server>true</headless-server>
+            </compc>
+        </sequential>
+    </macrodef>
+
+</project>
