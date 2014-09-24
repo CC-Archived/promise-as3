@@ -295,7 +295,7 @@ package com.codecatalyst.promise
 			{
 				timer.removeEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
 				
-				deferred.reject( new Error( "Promise timed out." ) );
+				deferred.reject( new TimeOutError() );
 			}
 			
 			var timer:Timer = new Timer( Math.max( milliseconds, 0 ), 1 );
