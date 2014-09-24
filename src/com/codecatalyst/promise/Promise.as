@@ -279,9 +279,9 @@ package com.codecatalyst.promise
 		}
 		
 		/**
-		 * Returns a new Promise that will automatically reject after the 
-		 * specified timeout (in milliseconds) if the specified promise has 
-		 * not fulfilled or rejected.
+		 * Returns a new Promise that will automatically reject with a 
+		 * TimeoutError after the specified timeout (in milliseconds) if 
+		 * the specified promise has not fulfilled or rejected.
 		 * 
 		 * @param promiseOrValue A Promise or value.
 		 * @param milliseconds Timeout duration (in milliseconds).
@@ -295,7 +295,7 @@ package com.codecatalyst.promise
 			{
 				timer.removeEventListener( TimerEvent.TIMER_COMPLETE, timerCompleteHandler );
 				
-				deferred.reject( new TimeOutError() );
+				deferred.reject( new TimeoutError() );
 			}
 			
 			var timer:Timer = new Timer( Math.max( milliseconds, 0 ), 1 );
