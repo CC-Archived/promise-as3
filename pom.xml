@@ -1,0 +1,90 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.codecatalyst</groupId>
+    <artifactId>promise-as3</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>swc</packaging>
+
+    <name>promise-as3 (CodeCatalyst)</name>
+
+    <properties>
+        <flexmojos.version>5.0-beta</flexmojos.version>
+        <flex.framework.version>4.6.b.23201</flex.framework.version>
+    </properties>
+
+    <build>
+        <sourceDirectory>src</sourceDirectory>
+
+        <plugins>
+            <plugin>
+                <groupId>net.flexmojos.oss</groupId>
+                <artifactId>flexmojos-maven-plugin</artifactId>
+                <version>${flexmojos.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <storepass/>
+                    <skipTest>true</skipTest>
+                    <skipTests>true</skipTests>
+                    <!-- debug is useful and doesn't harm! -->
+                    <debug>true</debug>
+                    <optimize>true</optimize>
+                    <compilerWarnings>
+                        <warn-no-constructor>false</warn-no-constructor>
+                    </compilerWarnings>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.adobe.flex</groupId>
+                        <artifactId>compiler</artifactId>
+                        <version>${flex.framework.version}</version>
+                        <type>pom</type>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <configuration>
+                    <attach>true</attach>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.4</version>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.adobe.flex.framework</groupId>
+            <artifactId>flex-framework</artifactId>
+            <version>${flex.framework.version}</version>
+            <type>pom</type>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>flex-mojos-repository</id>
+            <url>http://repository.sonatype.org/content/groups/flexgroup/</url>
+        </repository>
+
+        <repository>
+            <id>sonatype-repository</id>
+            <url>https://oss.sonatype.org/content/groups/public</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>rso</id>
+            <url>http://repository.sonatype.org/content/groups/flexgroup/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+</project>
