@@ -205,17 +205,17 @@ class CallbackQueue
 	/**
 	 * Queued Callback(s).
 	 */
-	protected const queuedCallbacks:Array = new Array(1e4);
+	private const queuedCallbacks:Array = new Array(1e4);
 	
 	/**
 	 * Interval identifier.
 	 */
-	protected var intervalId:int = 0;
+	private var intervalId:int = 0;
 	
 	/**
 	 * # of pending callbacks.
 	 */
-	protected var queuedCallbackCount:uint = 0;
+	private var queuedCallbackCount:uint = 0;
 	
 	// ========================================
 	// Constructor
@@ -253,7 +253,7 @@ class CallbackQueue
 	/**
 	 * Execute any queued callbacks and clear the queue.
 	 */
-	protected function execute():void
+	private function execute():void
 	{
 		clearInterval( intervalId );
 		
@@ -283,12 +283,12 @@ class Callback
 	/**
 	 * Callback closure.
 	 */
-	protected var closure:Function;
+	private var closure:Function;
 	
 	/**
 	 * Callback parameters.
 	 */
-	protected var parameters:Array;
+	private var parameters:Array;
 	
 	// ========================================
 	// Constructor

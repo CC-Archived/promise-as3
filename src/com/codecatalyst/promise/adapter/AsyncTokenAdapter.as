@@ -97,7 +97,7 @@ class DeferredResponder implements IResponder
 	// Constructor
 	// ========================================
 
-	function DeferredResponder()
+	public function DeferredResponder()
 	{
 		this.deferred = new Deferred();
 	}
