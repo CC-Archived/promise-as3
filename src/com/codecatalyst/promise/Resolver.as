@@ -76,11 +76,10 @@ package com.codecatalyst.promise
 		 */
 		private var _promise:Promise = null;
 		
-		[ArrayElementType("com.codecatalyst.promise.Consequence")]
 		/**
 		 * Pending Consequences chained to this Resolver.
 		 */
-		private var consequences:Array = [];
+		private var consequences:Vector.<Consequence>;
 		
 		/**
 		 * Indicates whether this Resolver has been completed.
@@ -104,7 +103,7 @@ package com.codecatalyst.promise
 		public function Resolver()
 		{
 			this._promise = new Promise( this );
-			this.consequences = [];
+			this.consequences = new Vector.<Consequence>();
 		}
 		
 		// ========================================
@@ -252,11 +251,11 @@ package com.codecatalyst.promise
 			completionValue = value;
 			completed = true;
 			
-			for each ( var consequence:Consequence in consequences )
+			for (var i:uint = 0, l:uint = consequences.length; i < l; i++)
 			{
-				consequence.trigger( completionAction, completionValue );
+				consequences[i].trigger( completionAction, completionValue );
 			}
-			consequences = [];
+			consequences = new Vector.<Consequence>();
 		}
 	}
 }
