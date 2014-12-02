@@ -205,7 +205,7 @@ class CallbackQueue
 	/**
 	 * Queued Callback(s).
 	 */
-	protected const queuedCallbacks:Array = new Array(1e4);
+	protected const queuedCallbacks:Array = new Array(200);
 	
 	/**
 	 * Interval identifier.
