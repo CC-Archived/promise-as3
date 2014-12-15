@@ -108,7 +108,7 @@ package com.codecatalyst.promise
 		{
 			if ( ! ( promisesOrValues is Array || promisesOrValues is Object || Promise.isThenable( promisesOrValues ) ) )
 			{
-				throw new Error( "Invalid parameter: expected an Array or Promise of an Array." );
+				throw new Error( "Invalid parameter: expected an Array, an Object or Promise of an Array." );
 			}
 			
 			function process( promisesOrValues:* ):Promise
