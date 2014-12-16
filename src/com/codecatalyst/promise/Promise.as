@@ -84,6 +84,16 @@ package com.codecatalyst.promise
 			return ( value != null && ( value is Object || value is Function ) && "then" in value && value.then is Function );
 		}
 		
+		private static function numProperties(obj:Object): int
+		{
+			var count:int = 0;
+			for each ( var prop:Object in obj )
+			{
+				count++;
+			}
+			return count;
+		}
+		
 		/**
 		 * Returns a new Promise that will only fulfill once all the specified
 		 * Promises and/or values have been fulfilled, and will reject if any
@@ -96,21 +106,31 @@ package com.codecatalyst.promise
 		 */
 		public static function all( promisesOrValues:* ):Promise
 		{
-			if ( ! ( promisesOrValues is Array || Promise.isThenable( promisesOrValues ) ) )
+			if ( ! ( promisesOrValues is Array || promisesOrValues is Object || Promise.isThenable( promisesOrValues ) ) )
 			{
-				throw new Error( "Invalid parameter: expected an Array or Promise of an Array." );
+				throw new Error( "Invalid parameter: expected an Array, an Object or Promise of an Array." );
 			}
 			
-			function process( promisesOrValues:Array ):Promise
+			function process( promisesOrValues:* ):Promise
 			{
-				var remainingToResolve:uint = promisesOrValues.length;
-				var results:Array = new Array( promisesOrValues.length );
+				var remainingToResolve:uint;
+				var results:*;
+				
+				// Array or Object
+				if (promisesOrValues is Array) {
+					remainingToResolve = promisesOrValues.length;
+					results = new Array( promisesOrValues.length );
+				}
+				else {
+					remainingToResolve = numProperties( promisesOrValues );
+					results = {};
+				}
 				
 				var deferred:Deferred = new Deferred();
 				
 				if ( remainingToResolve > 0 )
 				{
-					function resolve( item:*, index:uint ):Promise
+					function resolve( item:*, index:* ):Promise
 					{
 						function fulfill( value:* ):*
 						{
@@ -125,11 +145,11 @@ package com.codecatalyst.promise
 						return Promise.when( item ).then( fulfill, deferred.reject );
 					}
 					
-					for ( var index:uint = 0; index < promisesOrValues.length; index++ )
+					for ( var key:* in promisesOrValues )
 					{
-						if ( index in promisesOrValues )
+						if ( key in promisesOrValues )
 						{
-							resolve( promisesOrValues[ index ], index );
+							resolve( promisesOrValues[ key ], key );
 						}
 						else
 						{
