@@ -593,6 +593,18 @@ package com.codecatalyst.promise
 			}
 		}
 		
+		/**
+		 * Creates a promise with a given resolver (breaks circular dependency when using Mocking)
+		 * 
+		 * @param resolver the instance of the resovler the promise is to use
+		 */
+		public static function create(resolver:Resolver) : Promise
+		{
+			var p : Promise = new Promise();
+			p.resolver = resolver;
+			return p;
+		}
+		
 		// ========================================
 		// Private static properties
 		// ========================================
@@ -620,9 +632,8 @@ package com.codecatalyst.promise
 		// Constructor
 		// ========================================
 		
-		public function Promise( resolver:Resolver )
-		{
-			this.resolver = resolver;	
+		public function Promise()
+		{	
 		}
 		
 		// ========================================
