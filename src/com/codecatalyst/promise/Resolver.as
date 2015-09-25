@@ -103,7 +103,7 @@ package com.codecatalyst.promise
 		
 		public function Resolver()
 		{
-			this._promise = new Promise( this );
+			this._promise = Promise.create(this);
 			this.consequences = [];
 		}
 		
