@@ -1,0 +1,11 @@
+{
+  "name": "promise-as3",
+  "version": "1.0.0",
+  "description": "Promises/A+ compliant implementation in ActionScript 3.0",
+  "author": "John Yanarella <jmy@codecatalyst.com>",
+  "keywords": ["as3", "promise", "promises", "promises-aplus", "async", "asynchronous", "deferred"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CodeCatalyst/promise-as3"
+  }
+}
